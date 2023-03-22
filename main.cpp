@@ -309,10 +309,10 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
             }
             else {
                 if (workbenchs[workbenchId].getProductStatus() == 1 || rest_time == 0) {
-                    return move_time * 5;
+                    return move_time * 5.6;
                 }
                 else if (rest_time > 0) {
-                    return calAllowWaitTime(rest_time, move_time, bench_type) * 5;
+                    return calAllowWaitTime(rest_time, move_time, bench_type) * 5.6;
                 }
                 //return INT_MAX-1;
             }
@@ -942,6 +942,7 @@ void action() {
             }
         }
         if (target_bench == -1) {
+            cerr << "frame:" << frameId << endl;
             std::cerr << "err:action" << endl;
             continue;
         }
