@@ -62,7 +62,7 @@ public:
 		double w_coor_y = workbench.getCoordinateY();
 		//double angleToTarget = adjustDirection(w_coor_x, w_coor_y, r_coor_x, r_coor_y, this->getDirection());
 		angleToTarget = adjustDirection(w_coor_x, w_coor_y, r_coor_x, r_coor_y, this->getDirection());
-		double angleSpeed = angleToTarget / DELTATIME;
+		double angleSpeed = angleToTarget / DELTATIME / 6;
 		return angleSpeed;
 	}
 
