@@ -231,13 +231,13 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
         return move_time / 2;
     }
     // 456工作台材料格空余 且7没有这种材料  (有7工作台）
-    /*for (auto bench : workbenchs_7) {
+    for (auto bench : workbenchs_7) {
         if (bench->getRestFrame() < 0 && !bench->getReservedGoods(bench_type) &&
             (bench_type == 4 || bench_type == 5 || bench_type == 6) && material_status)
         {
-            return move_time / 1.2;
+            return move_time / 1.3;
         }
-    }*/
+    }
     // 456工作台材料格空余 且 只缺一个 （无7工作台）
     if ((bench_type == 4 || bench_type == 5 || bench_type == 6) && full_count == 1 && material_status && workbench_num_7 == 0) {
         return move_time / 1.2;
@@ -824,9 +824,9 @@ void checkCollision(const int& robotId) {
 
     for (auto& robot : robots) {
         double distance = robot.calDistance(robots[robotId]);
-        double check_distance = 6;
-        double spped_check_distance = 3;
-        double check_angle = PI / 7;
+        double check_distance = 4.5;
+        double spped_check_distance = 2;
+        double check_angle = PI / 8;
         //double ratio = distance > 5 ? 5 : distance;
         //double check_distance = RADUIS_FULL * 2.1 * ratio;
         //double check_angle = PI / 2 / ratio;
@@ -855,7 +855,8 @@ void checkCollision(const int& robotId) {
             
             // 只检测当前朝向一定范围内的扇形区域
             if (between_angle < check_angle && distance < check_distance ) {
-                //// A×B为正 B在A的逆时针方向 否则顺时针方向 
+                
+                // A×B为正 B在A的逆时针方向 否则顺时针方向 
                 //if (cross > 0) {
                 //    // 顺时针转
                 //    robots[robotId].rotate(-offset_angle);
@@ -863,7 +864,6 @@ void checkCollision(const int& robotId) {
                 //else {
                 //    robots[robotId].rotate(offset_angle);
                 //}
-                
                 //if (PI / 2 / 1.1 <= dif && dif < PI) {
                 //    // 顺时针转
                 //    robots[robotId].rotate(-offset_angle);
@@ -873,15 +873,15 @@ void checkCollision(const int& robotId) {
                 //    robots[robotId].rotate(offset_angle);
                 //}
 
-                if (PI / 2 / 1.1 <= dif && dif < PI * 3/4) {
+                if (PI / 2  <= dif && dif < PI * 5/8) {
                     // 顺时针转
                     robots[robotId].rotate(-offset_angle);
                 }
-                else if (PI * 5/4 < dif && dif <= PI * 3/2 * 1.1) {
+                else if (PI * 11/8 < dif && dif <= PI * 3/2 ) {
                     // 逆时针转
                     robots[robotId].rotate(offset_angle);
                 }
-                else if(PI * 3/4 <= dif && dif <= PI * 5/4)
+                else if(PI * 5/8 <= dif && dif <= PI * 11/8)
                 {
                     if (cross > 0) {
                         // 顺时针转
@@ -892,7 +892,27 @@ void checkCollision(const int& robotId) {
                     }
                 }
 
-                // 距离更近
+                /*if (cross > 0) {
+                    if(PI /2 <=dif && dif <= PI)
+                    {
+                        robots[robotId].rotate(-offset_angle);
+                    }
+                    else if(dif <= PI  && dif <= PI * 3/2) {
+                        robots[robotId].rotate(offset_angle);
+                    }
+                }
+                else {
+                    if (PI  <= dif && dif <= PI * 3/2)
+                    {
+                        robots[robotId].rotate(offset_angle);
+                    }
+                    else if(PI / 2 <= dif && dif <= PI) {
+                        robots[robotId].rotate(-offset_angle);
+                    }
+                }*/
+                
+
+                // 距离非常接近减速
                 if (distance < spped_check_distance) {
                     robots[robotId].forward(3);
                 }
