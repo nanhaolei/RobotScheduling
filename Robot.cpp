@@ -1,6 +1,3 @@
-#include <iostream>
-#include <math.h>
-#include "Constant.h"
 #include "Workbench.cpp"
 #include <vector>
 using namespace std;
@@ -62,7 +59,7 @@ public:
 		double w_coor_y = workbench.getCoordinateY();
 		//double angleToTarget = adjustDirection(w_coor_x, w_coor_y, r_coor_x, r_coor_y, this->getDirection());
 		angleToTarget = adjustDirection(w_coor_x, w_coor_y, r_coor_x, r_coor_y, this->getDirection());
-		double angleSpeed = angleToTarget / DELTATIME;
+		double angleSpeed = angleToTarget / DELTATIME / 6;
 		return angleSpeed;
 	}
 
@@ -138,15 +135,15 @@ public:
 		lineSpeed = MAX_FORWARD_SPEED;
 
 		// 在目标工作台附近
+		if (distance < JUDGE_DISTANCE * 3) {
+			lineSpeed = 1;
+		}
 		/*if (distance < JUDGE_DISTANCE * 4) {
 			lineSpeed = 2;
 		}
 		else if (distance < JUDGE_DISTANCE * 2) {
 			lineSpeed = 1;
 		}*/
-		if (distance < JUDGE_DISTANCE * 3) {
-			lineSpeed = 1;
-		}
 		
 		// 在墙边 且转弯角度大于60
 		if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {

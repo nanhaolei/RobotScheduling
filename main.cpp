@@ -173,7 +173,7 @@ vector<Workbench*> findSellBenchs(const int& goods_type) {
 }
 
 // 计算卖出优先级
-double calSellPriority(const double& distance, const int& workbenchId, const int& goodsType, const bool& last=false) {
+double calSellPriority(const double& distance, const int& workbenchId, const int& goodsType, double& actual_time, const bool& last = false) {
     vector<int> binary(8, 0);
     bool material_status = workbenchs[workbenchId].checkMaterialStatus(goodsType, binary);
     //bool material_status = !workbenchs[workbenchId].getHoldGoods(goodsType);
@@ -196,8 +196,7 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
     double offset = 1.2;
     double move_time = distance / speed * offset;
     double rest_time = workbenchs[workbenchId].getRestFrame() / static_cast<double>(FPS);
-    //double timeCoff = 1 - sqrt(1 - (1 - move_time * FPS / 9000) * (1 - move_time * FPS / 9000)) * 0.2 + 0.8;
-
+    
     // 计算几个材料格不空余
     int full_count = 0;
     for (int i = 0; i < 8; ++i) {
@@ -206,52 +205,67 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
 
     // 89工作台始终为运动时间
     if (bench_type == 8 || bench_type == 9) {
+        actual_time = move_time;
         return move_time;
     }
 
     // 最后时刻只看时间最短的
     if (last) {
         if (material_status) {
+            actual_time = move_time;
             return move_time;
         }
         else if (full_count == 2 && workbenchs[workbenchId].getProductStatus() == 0 && (bench_type == 4 || bench_type == 5 || bench_type == 6)) {
-            return calAllowWaitTime(rest_time, move_time, bench_type);
+            actual_time = calAllowWaitTime(rest_time, move_time, bench_type);
+            return actual_time;
+            //return calAllowWaitTime(rest_time, move_time, bench_type);
         }
         else  if (full_count == 3 && workbenchs[workbenchId].getProductStatus() == 0 && bench_type == 7) {
-            return calAllowWaitTime(rest_time, move_time, bench_type);
+            actual_time = calAllowWaitTime(rest_time, move_time, bench_type);
+            return actual_time;
+            //return calAllowWaitTime(rest_time, move_time, bench_type);
         }
     }
 
     // 7工作台材料格空余 且 只缺一个 且 不在生产 
     if (bench_type == 7 && material_status && full_count == 2 && workbenchs[workbenchId].getRestFrame() < 0) {
+        actual_time = move_time;
         return move_time / 3;
     }
     // 456工作台材料格空余 且 只缺一个  (有7工作台）
     if ((bench_type == 4 || bench_type == 5 || bench_type == 6) && full_count == 1 && material_status && workbench_num_7 > 0) {
+        actual_time = move_time;
         return move_time / 2;
     }
     // 456工作台材料格空余 且7没有这种材料  (有7工作台）
-    /*for (auto bench : workbenchs_7) {
+    for (auto bench : workbenchs_7) {
         if (bench->getRestFrame() < 0 && !bench->getReservedGoods(bench_type) &&
             (bench_type == 4 || bench_type == 5 || bench_type == 6) && material_status)
         {
-            return move_time / 1.2;
+            actual_time = move_time;
+            return move_time / 1.3;
         }
-    }*/
+    }
     // 456工作台材料格空余 且 只缺一个 （无7工作台）
     if ((bench_type == 4 || bench_type == 5 || bench_type == 6) && full_count == 1 && material_status && workbench_num_7 == 0) {
+        actual_time = move_time;
         return move_time / 1.2;
     }
     // 目标材料格空余 缺一个以上
     if (material_status) {
+        actual_time = move_time;
         return move_time;
     }
     // 正在生产 且 所有材料格都不空余 且 产品格没物品 
     if (rest_time > 0 && full_count == 2 && workbenchs[workbenchId].getProductStatus() == 0 && (bench_type == 4 || bench_type == 5 || bench_type == 6)) {
-        return calAllowWaitTime(rest_time, move_time, bench_type);
+        actual_time = calAllowWaitTime(rest_time, move_time, bench_type);
+        return actual_time;
+        //return calAllowWaitTime(rest_time, move_time, bench_type);
     }
     if (rest_time > 0 && full_count == 3 && workbenchs[workbenchId].getProductStatus() == 0 && bench_type == 7) {
-        return calAllowWaitTime(rest_time, move_time, bench_type);
+        actual_time = calAllowWaitTime(rest_time, move_time, bench_type);
+        return actual_time;
+        //return calAllowWaitTime(rest_time, move_time, bench_type);
     }
     return INT_MAX;
 }
@@ -269,7 +283,8 @@ int findSellBench(const int& robotId) {
     for (int i = 0; i < size; ++i) {
         int workbench_id = workbenchs_n[i]->getWorkbenchId();
         double distance = robots[robotId].calDistance(*workbenchs_n[i]);
-        double time = calSellPriority(distance, workbench_id, robots[robotId].getGoodsType());
+        double actual_time;
+        double time = calSellPriority(distance, workbench_id, robots[robotId].getGoodsType(), actual_time);
         // 若目标为89不判断目标冲突
         if (workbenchs[workbench_id].getType() == 8 || workbenchs[workbench_id].getType() == 9) {
             if (time < min_time) {
@@ -304,7 +319,7 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
     if (checkConflict(robotId, workbenchId)) {
         return INT_MAX;
     }
-    /*if ((bench_type == 4 || bench_type == 5 || bench_type == 6) && checkConflict(robotId, workbenchId)) {
+    /*if (checkConflict(robotId, workbenchId) && workbenchs[workbenchId].getRestFrame() != 0) {
         return INT_MAX;
     }*/
     
@@ -598,12 +613,13 @@ int unitProfitFirst(const int& robotId, const bool& last=false) {
         vector<Workbench*> sell_benchs = findSellBenchs(goods_type);
         for (auto sell_bench : sell_benchs) {
             double distance = buy_bench.calDistance(*sell_bench);
-            double sell_time = calSellPriority(distance, sell_bench->getWorkbenchId(), goods_type, last);
+            double actual_time;
+            double sell_time = calSellPriority(distance, sell_bench->getWorkbenchId(), goods_type, actual_time, last);
             if (sell_time == INT_MAX) {
                 continue;
             }
             double total_time = buy_time + sell_time;
-            double unit_profit = buy_bench.getProfit() / total_time;
+            double unit_profit = buy_bench.getProfit(actual_time) / total_time;
             if (unit_profit > max_unit_profit) {
                 max_unit_profit = unit_profit;
                 buy_bench_id = buy_bench.getWorkbenchId();
@@ -824,9 +840,9 @@ void checkCollision(const int& robotId) {
 
     for (auto& robot : robots) {
         double distance = robot.calDistance(robots[robotId]);
-        double check_distance = 6;
-        double spped_check_distance = 3;
-        double check_angle = PI / 7;
+        double check_distance = 4.5;
+        double spped_check_distance = 2;
+        double check_angle = PI / 8;
         //double ratio = distance > 5 ? 5 : distance;
         //double check_distance = RADUIS_FULL * 2.1 * ratio;
         //double check_angle = PI / 2 / ratio;
@@ -855,7 +871,8 @@ void checkCollision(const int& robotId) {
             
             // 只检测当前朝向一定范围内的扇形区域
             if (between_angle < check_angle && distance < check_distance ) {
-                //// A×B为正 B在A的逆时针方向 否则顺时针方向 
+                
+                // A×B为正 B在A的逆时针方向 否则顺时针方向 
                 //if (cross > 0) {
                 //    // 顺时针转
                 //    robots[robotId].rotate(-offset_angle);
@@ -863,7 +880,6 @@ void checkCollision(const int& robotId) {
                 //else {
                 //    robots[robotId].rotate(offset_angle);
                 //}
-                
                 //if (PI / 2 / 1.1 <= dif && dif < PI) {
                 //    // 顺时针转
                 //    robots[robotId].rotate(-offset_angle);
@@ -873,15 +889,15 @@ void checkCollision(const int& robotId) {
                 //    robots[robotId].rotate(offset_angle);
                 //}
 
-                if (PI / 2 / 1.1 <= dif && dif < PI * 3/4) {
+                if (PI / 2  <= dif && dif < PI * 5/8) {
                     // 顺时针转
                     robots[robotId].rotate(-offset_angle);
                 }
-                else if (PI * 5/4 < dif && dif <= PI * 3/2 * 1.1) {
+                else if (PI * 11/8 < dif && dif <= PI * 3/2 ) {
                     // 逆时针转
                     robots[robotId].rotate(offset_angle);
                 }
-                else if(PI * 3/4 <= dif && dif <= PI * 5/4)
+                else if(PI * 5/8 <= dif && dif <= PI * 11/8)
                 {
                     if (cross > 0) {
                         // 顺时针转
@@ -892,7 +908,27 @@ void checkCollision(const int& robotId) {
                     }
                 }
 
-                // 距离更近
+                /*if (cross > 0) {
+                    if(PI /2 <=dif && dif <= PI)
+                    {
+                        robots[robotId].rotate(-offset_angle);
+                    }
+                    else if(dif <= PI  && dif <= PI * 3/2) {
+                        robots[robotId].rotate(offset_angle);
+                    }
+                }
+                else {
+                    if (PI  <= dif && dif <= PI * 3/2)
+                    {
+                        robots[robotId].rotate(offset_angle);
+                    }
+                    else if(PI / 2 <= dif && dif <= PI) {
+                        robots[robotId].rotate(-offset_angle);
+                    }
+                }*/
+                
+
+                // 距离非常接近减速
                 if (distance < spped_check_distance) {
                     robots[robotId].forward(3);
                 }

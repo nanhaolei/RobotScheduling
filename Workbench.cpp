@@ -2,6 +2,7 @@
 #include <math.h>
 #include <unordered_map>
 #include <random>
+#include "Constant.h"
 #include "utils.cpp"
 using namespace std;
 
@@ -151,30 +152,32 @@ public:
 	}
 
 	// 返回产品利润
-	double getProfit() {
+	double getProfit(double actual_time) {
+		//double timeCoefficient = 1 - sqrt(1 - (1 - actual_time * FPS / 9000) * (1 - actual_time * FPS / 9000)) * 0.2 + 0.8;
+		double timeCoefficient = 1;
 		int goods_type = this->type;
 		switch (goods_type)
 		{
 		case 1:
-			return 3000;
+			return 6000 * timeCoefficient - 3000;
 			break;
 		case 2:
-			return 3200;
+			return 7600 * timeCoefficient - 4400;
 			break;
 		case 3:
-			return 3400;
+			return 9200 * timeCoefficient - 5800;
 			break;
 		case 4:
-			return 7100;
+			return 22500 * timeCoefficient - 15400;
 			break;
 		case 5:
-			return 7800;
+			return 25000 * timeCoefficient - 17200;
 			break;
 		case 6:
-			return 8300;
+			return 27500 * timeCoefficient - 19200;
 			break;
 		case 7:
-			return 29000;
+			return 105000* timeCoefficient - 76000;
 			break;
 		default:
 			break;
