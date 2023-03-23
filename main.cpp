@@ -825,7 +825,8 @@ void checkCollision(const int& robotId) {
     for (auto& robot : robots) {
         double distance = robot.calDistance(robots[robotId]);
         double check_distance = 6;
-        double check_angle = PI / 6;
+        double spped_check_distance = 3;
+        double check_angle = PI / 7;
         //double ratio = distance > 5 ? 5 : distance;
         //double check_distance = RADUIS_FULL * 2.1 * ratio;
         //double check_angle = PI / 2 / ratio;
@@ -889,6 +890,11 @@ void checkCollision(const int& robotId) {
                     else {
                         robots[robotId].rotate(offset_angle);
                     }
+                }
+
+                // 距离更近
+                if (distance < spped_check_distance) {
+                    robots[robotId].forward(3);
                 }
             }
 
