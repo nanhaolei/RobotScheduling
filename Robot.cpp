@@ -108,13 +108,13 @@ public:
 			++this->waitFrame;
 		}
 		// 计算在大范围内的总时间
-		if (distance < JUDGE_DISTANCE * 5) {
-			++this->waitsellFrame;
+		if (distance < JUDGE_DISTANCE * 4) {
+			++this->waitSellFrame;
 		}
 		// 超出给定范围 或在墙边 或目标变更 则重置时间
-		if (distance > JUDGE_DISTANCE * 5 || isBesideBoundary() || this->targetBenchId!=workbench.getWorkbenchId()) {
+		if (distance > JUDGE_DISTANCE * 4 || isBesideBoundary() || this->targetBenchId!=workbench.getWorkbenchId()) {
 			this->waitFrame = 0;
-			this->waitsellFrame = 0;
+			this->waitSellFrame = 0;
 		}
 
 	}
@@ -122,40 +122,13 @@ public:
 	// 计算速度
 	void calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSpeed) {
 		// 计算在工作台范围内的等待时间 超出允许等待时间让出位置
-		int allow_frame = 50;
+		int allow_frame = 80;
 		calWaitFrame(workbench);
 		if (this->waitFrame > allow_frame) {
 			lineSpeed = MIN_FORWARD_SPEED;
 			angleSpeed = 0;
 			return;
 		}
-
-		//// 计算运动速度
-		//double distance = calDistance(workbench);
-		//double cur_speed = length(this->lineSpeed[0], this->lineSpeed[1]);
-		//double angleToTarget;
-		//angleSpeed = calAngleSpeed(workbench, angleToTarget);
-		//// 转弯大于90度
-		//if (abs(angleToTarget) > PI / 2) {
-		//	lineSpeed = 0;
-		//}
-		//// 小于90度
-		//else {
-		//	lineSpeed = MAX_FORWARD_SPEED;
-		//}
-		//// 在墙边 减速
-		//if (isBesideBoundary() && distance < JUDGE_DISTANCE * 3) {
-		//	if (cur_speed > 1) {
-		//		lineSpeed = -2;
-		//	}
-		//	else {
-		//		lineSpeed = 1;
-		//	}
-		//}
-		//// 在工作台附近
-		//if (distance < JUDGE_DISTANCE * 2) {
-		//	lineSpeed = 1;
-		//}
 
 		// 计算运动速度
 		double distance = calDistance(workbench);
@@ -180,7 +153,6 @@ public:
 			lineSpeed = 0;
 		}
 	}
-
 
 	// 移动
 	void move(Workbench& workbench) {
@@ -210,12 +182,13 @@ public:
 					this->targetBenchId = -1;
 					this->sellBenchId = -1;
 					workbench.setReservedGoods(this->goodsType, false);
+					workbench.setHoldGoods(this->goodsType, true);
 				}
 				
 				// 特殊情况下在工作台附近无限等待 时间超过150帧就走
-				if (this->waitsellFrame > 150) {
+				if (this->waitSellFrame > 150) {
 					cerr << "err:wait unfinitly" << endl;
-					this->sell();
+					//this->sell();
 					this->targetBenchId = -1;
 					this->sellBenchId = -1;
 					workbench.setReservedGoods(this->goodsType, false);
@@ -247,7 +220,7 @@ private:
 	int sellBenchId;
 	int waitFrame;
 	int count;
-	int waitsellFrame;
+	int waitSellFrame;
 
 public:
 	Robot(int _robotId) :robotId(_robotId) {
@@ -266,7 +239,7 @@ public:
 		sellBenchId = -1;
 		waitFrame = 0;
 		count = 3;
-		waitsellFrame = 0;
+		waitSellFrame = 0;
 	};
 	~Robot() {};
 	int getRobotId() const { return robotId; }

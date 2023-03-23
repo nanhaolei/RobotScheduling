@@ -193,6 +193,7 @@ private:
 	int materialStatus;
 	int productStatus;
 	unordered_map <int, bool> reservedGoods;
+	unordered_map <int, bool> holdGoods;
 public:
 	Workbench(int _workbenchId, int _type) :workbenchId(_workbenchId), type(_type) {
 		coordinate[0] = 0;
@@ -201,6 +202,17 @@ public:
 		materialStatus = 0;
 		productStatus = 0;
 		reservedGoods = {
+			{1,false},
+			{2,false},
+			{3,false},
+			{4,false},
+			{5,false},
+			{6,false},
+			{7,false},
+			{8,false},
+			{9,false}
+		};
+		holdGoods = {
 			{1,false},
 			{2,false},
 			{3,false},
@@ -224,11 +236,30 @@ public:
 	int getRestFrame() const { return restFrame; }
 	void setRestFrame(int rt) { restFrame = rt; }
 	int getMaterialStatus() const { return materialStatus; }
-	void setMaterialStatus(int ms) { materialStatus = ms; }
+	void setMaterialStatus(int ms) { 
+		materialStatus = ms; 
+		int i = 0;
+		vector<int> binary(8, 0);
+		while (ms > 0) {
+			binary[i] = ms % 2;
+			ms /= 2;
+			++i;
+		}
+		for (int i = 0; i < 8; ++i) {
+			if (binary[i] == 1) {
+				holdGoods[i] = true;
+			}
+			else {
+				holdGoods[i] = false;
+			}
+		}
+	}
 	int getProductStatus() const { return productStatus; }
 	void setProductStatus(int ps) { productStatus = ps; }
 	bool getReservedGoods(int goods) { return reservedGoods[goods]; }
 	void setReservedGoods(int goods, bool status) { reservedGoods[goods] = status; }
+	bool getHoldGoods(int goods) { return holdGoods[goods]; }
+	void setHoldGoods(int goods, bool status) { holdGoods[goods] = status; }
 
 	void print() const {
 		std::cerr << "workbenchId: " << workbenchId << std::endl;
