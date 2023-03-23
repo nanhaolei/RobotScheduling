@@ -304,9 +304,14 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
     if (checkConflict(robotId, workbenchId)) {
         return INT_MAX;
     }
-    /*if ((bench_type == 4 || bench_type == 5 || bench_type == 6) && checkConflict(robotId, workbenchId)) {
-        return INT_MAX;
-    }*/
+
+    //if ((bench_type == 4 || bench_type == 5 || bench_type == 6) && checkConflict(robotId, workbenchId)) {
+    //    return INT_MAX;
+    //}
+    //// 目标冲突且不阻塞
+    //if ((bench_type == 1 || bench_type == 2 || bench_type == 3) && checkConflict(robotId, workbenchId) && workbenchs[workbenchId].getRestFrame()!=0) {
+    //    return INT_MAX;
+    //}
     
     double distance = robots[robotId].calDistance(workbenchs[workbenchId]);
     double speed = MAX_FORWARD_SPEED;
