@@ -871,7 +871,26 @@ void checkCollision(const int& robotId) {
             
             // 只检测当前朝向一定范围内的扇形区域
             if (between_angle < check_angle && distance < check_distance ) {
-                
+
+                if (PI / 2 <= dif && dif < PI * 5 / 8) {
+                    // 顺时针转
+                    robots[robotId].rotate(-offset_angle);
+                }
+                else if (PI * 11 / 8 < dif && dif <= PI * 3 / 2) {
+                    // 逆时针转
+                    robots[robotId].rotate(offset_angle);
+                }
+                else if (PI * 5 / 8 <= dif && dif <= PI * 11 / 8)
+                {
+                    if (cross > 0) {
+                        // 顺时针转
+                        robots[robotId].rotate(-offset_angle);
+                    }
+                    else {
+                        robots[robotId].rotate(offset_angle);
+                    }
+                }
+
                 // A×B为正 B在A的逆时针方向 否则顺时针方向 
                 //if (cross > 0) {
                 //    // 顺时针转
@@ -888,25 +907,6 @@ void checkCollision(const int& robotId) {
                 //    // 逆时针转
                 //    robots[robotId].rotate(offset_angle);
                 //}
-
-                if (PI / 2  <= dif && dif < PI * 5/8) {
-                    // 顺时针转
-                    robots[robotId].rotate(-offset_angle);
-                }
-                else if (PI * 11/8 < dif && dif <= PI * 3/2 ) {
-                    // 逆时针转
-                    robots[robotId].rotate(offset_angle);
-                }
-                else if(PI * 5/8 <= dif && dif <= PI * 11/8)
-                {
-                    if (cross > 0) {
-                        // 顺时针转
-                        robots[robotId].rotate(-offset_angle);
-                    }
-                    else {
-                        robots[robotId].rotate(offset_angle);
-                    }
-                }
 
                 /*if (cross > 0) {
                     if(PI /2 <=dif && dif <= PI)
@@ -926,7 +926,6 @@ void checkCollision(const int& robotId) {
                         robots[robotId].rotate(-offset_angle);
                     }
                 }*/
-                
 
                 // 距离非常接近减速
                 if (distance < spped_check_distance) {
