@@ -137,6 +137,7 @@ public:
 		if (distance < JUDGE_DISTANCE * 3) {
 			lineSpeed = 1;
 		}
+
 		/*if (distance < JUDGE_DISTANCE * 4) {
 			lineSpeed = 2;
 		}
