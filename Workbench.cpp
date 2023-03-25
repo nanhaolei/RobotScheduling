@@ -2,7 +2,7 @@
 #include <math.h>
 #include <unordered_map>
 #include <random>
-#include "Constant.h"
+#include "constant.h"
 #include "utils.cpp"
 using namespace std;
 
@@ -152,9 +152,12 @@ public:
 	}
 
 	// 返回产品利润
-	double getProfit(double actual_time) {
-		//double timeCoefficient = 1 - sqrt(1 - (1 - actual_time * FPS / 9000) * (1 - actual_time * FPS / 9000)) * 0.2 + 0.8;
-		double timeCoefficient = 1;
+	double getProfit(double actual_time, int flag=0) {
+		double timeCoefficient = 1 - sqrt(1 - (1 - actual_time * FPS / 9000) * (1 - actual_time * FPS / 9000)) * 0.2 + 0.8;
+		//double timeCoefficient = 1;
+		if (flag == 3) {
+			timeCoefficient = 1;
+		}
 		int goods_type = this->type;
 		switch (goods_type)
 		{
@@ -177,7 +180,7 @@ public:
 			return 27500 * timeCoefficient - 19200;
 			break;
 		case 7:
-			return 105000* timeCoefficient - 76000;
+			return 105000 * timeCoefficient - 76000;
 			break;
 		default:
 			break;
@@ -185,7 +188,6 @@ public:
 		cerr << "err:calProfit" << endl;
 		return -1;
 	}
-
 
 
 private:
@@ -227,7 +229,7 @@ public:
 			{9,false}
 		};
 	};
-	~Workbench(){};
+	~Workbench() {};
 	int getWorkbenchId() const { return workbenchId; }
 	void setWorkbenchId(int id) { workbenchId = id; }
 	int getType() const { return type; }
@@ -239,8 +241,9 @@ public:
 	int getRestFrame() const { return restFrame; }
 	void setRestFrame(int rt) { restFrame = rt; }
 	int getMaterialStatus() const { return materialStatus; }
-	void setMaterialStatus(int ms) { 
-		materialStatus = ms; 
+	// to do:bug
+	void setMaterialStatus(int ms) {
+		materialStatus = ms;
 		int i = 0;
 		vector<int> binary(8, 0);
 		while (ms > 0) {
@@ -248,7 +251,7 @@ public:
 			ms /= 2;
 			++i;
 		}
-		for (int i = 0; i < 8; ++i) {
+		for (int i = 1; i < 8; ++i) {
 			if (binary[i] == 1) {
 				holdGoods[i] = true;
 			}
@@ -256,6 +259,16 @@ public:
 				holdGoods[i] = false;
 			}
 		}
+		/*while (ms > 0) {
+			if (ms % 2 == 1) {
+				holdGoods[i] = true;
+			}
+			else {
+				holdGoods[i] = false;
+			}
+			ms /= 2;
+			++i;
+		}*/
 	}
 	int getProductStatus() const { return productStatus; }
 	void setProductStatus(int ps) { productStatus = ps; }
