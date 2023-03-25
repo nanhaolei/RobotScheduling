@@ -227,23 +227,9 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
             }
 
             // 材料格空余 且 只缺一个
-            if (full_count == 1)
-            {
+            if (full_count == 1) {
                 coefficient *= 4; // 63w
             }
-
-            // 7没有该材料
-            /*for (auto bench : workbenchs_7) {
-                if (!bench->getReservedGoods(bench_type))
-                {
-                    coefficient *= 4;
-                }
-            }*/
-
-            // 产品格上有产品
-            /*if (workbenchs[workbenchId].getProductStatus()) {
-                coefficient *= 2;
-            }*/
 
             // 材料格空余
             if (material_status) {
@@ -255,7 +241,6 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
                 actual_time = calAllowWaitTime(rest_time, move_time, bench_type);
                 return actual_time / coefficient;
             }
-
             return INT_MAX;
         }
         else {
@@ -271,8 +256,7 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
             }
 
             // 材料格空余 且 只缺一个
-            if (material_status && full_count == 1)
-            {
+            if (material_status && full_count == 1) {
                 // 有7
                 if (workbench_num_7 > 0) {
                     coefficient *= 4;
@@ -283,10 +267,13 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
                 }
             }
 
-            // 产品格上有产品
-            /*if (workbenchs[workbenchId].getProductStatus()) {
-                coefficient *= 2;
-            }*/
+            // 图2特化
+            if(map == 2) {
+                // 产品格上有产品
+                if (bench_type == 6 && (workbenchs[workbenchId].getProductStatus() || workbenchs[workbenchId].getRestFrame() > 0)) {
+                    coefficient *= 2;
+                }
+            }
 
             // 缺两个
             if (material_status) {
@@ -1571,6 +1558,10 @@ int main() {
     // 图1
     if (workbench_num_7 == 8) {
         map = 1;
+    }
+    // 图2
+    if (workbench_num_7 == 2 && workbench_num_8 == 2) {
+        map = 2;
     }
     // 图3
     if (workbench_num_7 == 0) {
