@@ -246,6 +246,25 @@ public:
 		return this->count++;
 	}
 
+	inline int getCount12() {
+		if (this->count12 == 3) {
+			this->count12 = 1;
+		}
+		return this->count12++;
+	}
+	inline int getCount23() {
+		if (this->count23 == 4) {
+			this->count23 = 2;
+		}
+		return this->count23++;
+	}
+	inline int getCount13() {
+		if (this->count13 == 5) {
+			this->count13 = 1;
+		}
+		return this->count13+=2;
+	}
+
 private:
 	int robotId;
 	int workbenchId;
@@ -261,7 +280,9 @@ private:
 	int waitFrame;
 	int count;
 	int waitSellFrame;
-
+	int count12;
+	int count23;
+	int count13;
 public:
 	Robot(int _robotId) :robotId(_robotId) {
 		workbenchId = -1;
@@ -280,6 +301,10 @@ public:
 		waitFrame = 0;
 		count = 1;
 		waitSellFrame = 0;
+
+		count12 = 1;
+		count23 = 2;
+		count13 = 1;
 	};
 	~Robot() {};
 	int getRobotId() const { return robotId; }

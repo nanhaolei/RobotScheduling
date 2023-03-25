@@ -258,37 +258,7 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
 
             return INT_MAX;
         }
-        else if (map == 1) {
-            double coefficient = 1;
-            // 材料格空余 且 7没有该材料
-            if (material_status) {
-                for (auto bench : workbenchs_7) {
-                    if (!bench->getReservedGoods(bench_type))
-                    {
-                        coefficient *= 8;
-                        break;
-                    }
-                }
-            }
-            // 材料格空余 且 只缺一个
-            if (material_status && full_count == 1)
-            {
-                coefficient *= 4;
-            }
-
-            // 缺两个
-            if (material_status) {
-                actual_time = move_time;
-                return move_time / coefficient;
-            }
-            // 正在生产 且 所有材料格都不空余 且 产品格没物品 
-            else if (rest_time > 0 && full_count == 2 && workbenchs[workbenchId].getProductStatus() == 0) {
-                actual_time = calAllowWaitTime(rest_time, move_time, bench_type);
-                return actual_time / coefficient;
-            }
-        }
-        else
-        {
+        else {
             double coefficient = 1;
             // 材料格空余 且 7没有该材料
             if (material_status) {
@@ -751,8 +721,62 @@ int closestFirst(const int& robotId) {
     return target_bench;
 }
 
-// 固定买123
+// 固定合456
 int fixPath(const int& robotId) {
+    int target_bench = -1;
+    int goods;
+    if (robotId == 0) {
+        goods = robots[robotId].getCount12();
+        target_bench = findMaterial(robotId, goods, -1);
+        for (auto bench : workbenchs_4) {
+            if (bench->checkMaterialStatus(goods)) {
+                robots[robotId].setSellBenchId(bench->getWorkbenchId());
+                break;
+            }
+        }
+    }
+    if (robotId == 1) {
+        goods = robots[robotId].getCount13();
+        target_bench = findMaterial(robotId, goods, -1);
+        for (auto bench : workbenchs_5) {
+            if (bench->checkMaterialStatus(goods)) {
+                robots[robotId].setSellBenchId(bench->getWorkbenchId());
+                break;
+            }
+        }
+    }
+    if (robotId == 2) {
+        goods = robots[robotId].getCount23();
+        target_bench = findMaterial(robotId, goods, -1);
+        for (auto bench : workbenchs_6) {
+            if (bench->checkMaterialStatus(goods)) {
+                robots[robotId].setSellBenchId(bench->getWorkbenchId());
+                break;
+            }
+        }
+    }
+    if (robotId == 3) {
+        if (frameId < 30) {
+            return -1;
+        }
+        for (auto& bench : workbenchs) {
+            int type = bench.getType();
+            if (type == 7 && bench.getProductStatus()) {
+                target_bench = bench.getWorkbenchId();
+            }
+            if ((type == 4 || type == 5 || type == 6) && (bench.getProductStatus() || (bench.getRestFrame() > 0 && bench.getRestFrame() < 100))) {
+                target_bench = bench.getWorkbenchId();
+            }
+        }
+        if (target_bench == -1) {
+            target_bench = findMaterial(robotId, robots[robotId].getCount(), -1); // 123循环
+        }
+    }
+    return target_bench;
+}
+
+// 固定买123
+int fixPath2(const int& robotId) {
     int target_bench = -1;
 
     if (robotId == 0) {
@@ -767,6 +791,7 @@ int fixPath(const int& robotId) {
     else if (robotId == 1) {
         for (auto& bench : workbenchs) {
             int type = bench.getType();
+            // 65w
             if ((type == 4 || type == 5 || type == 6) && (bench.getProductStatus() || (bench.getRestFrame() > 0 && bench.getRestFrame() < 80))) {
                 target_bench = bench.getWorkbenchId();
                 break;
@@ -990,22 +1015,30 @@ void checkCollision(const int& robotId) {
                     robots[robotId].forward(3);
                 }
             }
-
+            
             // 特殊情况下两个一直对向贴在一起
             if (distance < RADUIS_FULL * 2.1 && PI / 2 <= dif && dif < PI * 3 / 2) {
                 robots[robotId].rotate(offset_angle);
             }
-
-            // 图1特化
-            if (map == 1) {
+            
+            // 图1特化 65w
+            /*if (map == 1) {
                 if (distance < RADUIS_FULL * 15 && robot.isBesideBoundary()) {
                     robots[robotId].forward(3);
                 }
                 if (distance < RADUIS_FULL * 5 && PI / 2 <= dif && dif < PI * 3 / 2) {
-                    robots[robotId].rotate(offset_angle/2);
+                    robots[robotId].rotate(offset_angle / 2);
+                }
+            }*/
+            // 图1特化 67w8
+            if (map == 1) {
+                // 在墙边
+                if (between_angle < PI / 3 && distance < RADUIS_FULL * 12 && robot.isBesideBoundary()) {
+                    robots[robotId].forward(3);
+                    robots[robotId].rotate(offset_angle / 2);
                 }
             }
-
+            
         }
     }
 }
