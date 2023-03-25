@@ -158,6 +158,19 @@ public:
 			//	lineSpeed = 0;
 			//}
 		}
+		if (map == 1) {
+			// 在墙边 且转弯角度大于60
+			if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
+				lineSpeed = 0;
+			}
+			// 不在墙边 转弯角度大于90
+			if (abs(angleToTarget) > PI / 3) {
+				lineSpeed = 0;
+			}
+			if (distance < JUDGE_DISTANCE * 5 && abs(angleToTarget) > PI / 3) {
+				lineSpeed = 0;
+			}
+		}
 		// 图3特化
 		if (map == 3) {
 			if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
@@ -173,8 +186,6 @@ public:
 				lineSpeed = 0;
 			}
 		}
-
-
 
 	}
 
@@ -222,13 +233,17 @@ public:
 		}
 	}
 
-	// 令count在321循环
+	// 令count循环
 	inline int getCount() {
-		if (this->count == 0) {
-			this->count = 3;
-			//this->count = 6;
+		//if (this->count == 0) {
+		//	this->count = 3;
+		//	//this->count = 6;
+		//}
+		//return this->count--;
+		if (this->count == 4) {
+			this->count = 1;
 		}
-		return this->count--;
+		return this->count++;
 	}
 
 private:
@@ -263,7 +278,7 @@ public:
 		targetBenchId = -1;
 		sellBenchId = -1;
 		waitFrame = 0;
-		count = 3;
+		count = 1;
 		waitSellFrame = 0;
 	};
 	~Robot() {};

@@ -137,6 +137,7 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
     vector<int> binary(8, 0);
     bool material_status = workbenchs[workbenchId].checkMaterialStatus(goodsType, binary);
     //bool material_status = !workbenchs[workbenchId].getHoldGoods(goodsType);
+    
     // 计算几个材料格不空余
     int full_count = 0;
     for (int i = 0; i < 8; ++i) {
@@ -256,6 +257,35 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
             }
 
             return INT_MAX;
+        }
+        else if (map == 1) {
+            double coefficient = 1;
+            // 材料格空余 且 7没有该材料
+            if (material_status) {
+                for (auto bench : workbenchs_7) {
+                    if (!bench->getReservedGoods(bench_type))
+                    {
+                        coefficient *= 8;
+                        break;
+                    }
+                }
+            }
+            // 材料格空余 且 只缺一个
+            if (material_status && full_count == 1)
+            {
+                coefficient *= 4;
+            }
+
+            // 缺两个
+            if (material_status) {
+                actual_time = move_time;
+                return move_time / coefficient;
+            }
+            // 正在生产 且 所有材料格都不空余 且 产品格没物品 
+            else if (rest_time > 0 && full_count == 2 && workbenchs[workbenchId].getProductStatus() == 0) {
+                actual_time = calAllowWaitTime(rest_time, move_time, bench_type);
+                return actual_time / coefficient;
+            }
         }
         else
         {
@@ -728,22 +758,26 @@ int fixPath(const int& robotId) {
     if (robotId == 0) {
         target_bench = findMaterial(robotId, 1, -1);
     }
-    else if (robotId == 1) {
-        target_bench = findMaterial(robotId, 2, -1);
-    }
-    else if (robotId == 2) {
+    else if (robotId == 3) {
         target_bench = findMaterial(robotId, 3, -1);
     }
-    else if (robotId == 3) {
+    else if (robotId == 2) {
+        target_bench = findMaterial(robotId, 2, -1);
+    }
+    else if (robotId == 1) {
         for (auto& bench : workbenchs) {
             int type = bench.getType();
-            if ((type == 4 || type == 5 || type == 6 || type == 7) && (bench.getProductStatus() || (bench.getRestFrame() > 0 && bench.getRestFrame() < 30))) {
+            if ((type == 4 || type == 5 || type == 6) && (bench.getProductStatus() || (bench.getRestFrame() > 0 && bench.getRestFrame() < 80))) {
+                target_bench = bench.getWorkbenchId();
+                break;
+            }
+            else if (type == 7 && bench.getProductStatus()) {
                 target_bench = bench.getWorkbenchId();
                 break;
             }
         }
         if (target_bench == -1) {
-            target_bench = findMaterial(robotId, robots[robotId].getCount(), -1); // 321循环
+            target_bench = findMaterial(robotId, robots[robotId].getCount(), -1); // 123循环
         }
 
     }
@@ -960,6 +994,16 @@ void checkCollision(const int& robotId) {
             // 特殊情况下两个一直对向贴在一起
             if (distance < RADUIS_FULL * 2.1 && PI / 2 <= dif && dif < PI * 3 / 2) {
                 robots[robotId].rotate(offset_angle);
+            }
+
+            // 图1特化
+            if (map == 1) {
+                if (distance < RADUIS_FULL * 15 && robot.isBesideBoundary()) {
+                    robots[robotId].forward(3);
+                }
+                if (distance < RADUIS_FULL * 5 && PI / 2 <= dif && dif < PI * 3 / 2) {
+                    robots[robotId].rotate(offset_angle/2);
+                }
             }
 
         }
@@ -1288,11 +1332,11 @@ void action() {
                     target_bench = findMaterial(robotId, goods_type);
                 }*/
 
-                // 图3特化
+                // 图1特化
                 if (map == 1) {
                     target_bench = fixPath(robotId);
                 }
-                // 图1特化
+                // 图3特化
                 else if (map == 3) {
                     target_bench = unitProfitFirst_3(robotId);
                 }
@@ -1335,9 +1379,8 @@ void action() {
             continue;
         }
 
-        // 图4特化
-        if (map == 4)
-        {
+        // 图1特化
+        if (map == 1) {
             robots[robotId].move(workbenchs[target_bench], map);
             checkCollision(robotId);
         }
@@ -1345,6 +1388,12 @@ void action() {
         else if (map == 3) {
             robots[robotId].move(workbenchs[target_bench], map);
             checkCollision_3(robotId);
+        }
+        // 图4特化
+        else if (map == 4)
+        {
+            robots[robotId].move(workbenchs[target_bench], map);
+            checkCollision(robotId);
         }
         else {
             robots[robotId].move(workbenchs[target_bench]);
