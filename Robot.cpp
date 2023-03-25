@@ -43,7 +43,7 @@ public:
 		double distance = length(dx, dy);
 		return distance;
 	}
-	
+
 	// 计算两个向量之间的夹角（单位为弧度）
 	inline double angleBetween(double dx1, double dy1, double dx2, double dy2) {
 		double len1 = length(dx1, dy1);
@@ -116,7 +116,7 @@ public:
 	}
 
 	// 计算速度
-	void calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSpeed, int map=0) {
+	void calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSpeed, int map = 0) {
 		// 计算在工作台范围内的等待时间 超出允许等待时间让出位置
 		int allow_frame = 80;
 		calWaitFrame(workbench);
@@ -137,7 +137,6 @@ public:
 		if (distance < JUDGE_DISTANCE * 3) {
 			lineSpeed = 1;
 		}
-
 		/*if (distance < JUDGE_DISTANCE * 4) {
 			lineSpeed = 2;
 		}
@@ -145,7 +144,7 @@ public:
 			lineSpeed = 1;
 		}*/
 
-		if(map == 0)
+		if (map == 0)
 		{
 			if (abs(angleToTarget) > PI / 3) {
 				lineSpeed = 0;
@@ -175,12 +174,12 @@ public:
 			}
 		}
 
-		
-		
+
+
 	}
 
 	// 移动
-	void move(Workbench& workbench, int map=0) {
+	void move(Workbench& workbench, int map = 0) {
 		int lineSpeed = 0;
 		double angleSpeed = 0;
 		calSpeed(workbench, lineSpeed, angleSpeed, map);
