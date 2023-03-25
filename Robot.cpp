@@ -158,12 +158,8 @@ public:
 			//	lineSpeed = 0;
 			//}
 		}
+		// 图1特化
 		if (map == 1) {
-			// 在墙边 且转弯角度大于60
-			if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
-				lineSpeed = 0;
-			}
-			// 不在墙边 转弯角度大于90
 			if (abs(angleToTarget) > PI / 3) {
 				lineSpeed = 0;
 			}

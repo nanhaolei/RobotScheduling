@@ -34,11 +34,12 @@ int map;
 
 // 目标冲突检测
 bool checkConflict(const int& robotId, const int& target_bench) {
-    bool isSelected = false;
+    //bool isSelected = false;
     int count = 0;
+    int type = workbenchs[target_bench].getType();
     // 89不做冲突检测
-    if (workbenchs[target_bench].getType() == 8 || workbenchs[target_bench].getType() == 9) {
-        return isSelected;
+    if (type == 8 || type == 9) {
+        return false;
     }
     for (auto& robot : robots) {
         // 目标相同且携带物品相同
@@ -141,7 +142,8 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
     // 计算几个材料格不空余
     int full_count = 0;
     for (int i = 0; i < 8; ++i) {
-        if (binary[i] == 1) ++full_count;
+        if (binary[i] == 1) 
+            ++full_count;
     }
     // 目标材料格不空余而且不在生产
     if (!material_status && workbenchs[workbenchId].getRestFrame() <= 0) {
@@ -217,7 +219,7 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
     else if ((bench_type == 4 || bench_type == 5 || bench_type == 6)) {
         // 图4特化
         if (map == 4) {
-            double coefficient = 1;
+            double coefficient = 1.0;
             if (bench_type == 4) {
                 coefficient *= 12; // 63w
 
@@ -243,8 +245,39 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
             }
             return INT_MAX;
         }
+        // 图2特化
+        else if (map == 2) {
+            double coefficient = 1.0;
+            bool sell = material_status || (rest_time > 0 && full_count == 2 && workbenchs[workbenchId].getProductStatus() == 0);
+            if (!sell) return INT_MAX;
+
+            if (workbenchId == 0 || workbenchId == 22) {
+                coefficient *= 2.5; // 85w
+            }
+            if (bench_type == 5) {
+                coefficient *= 1.5; // 85w
+            }
+            if (bench_type == 4) {
+                coefficient *= 1.2; // 85w
+            }
+            if (full_count == 1) {
+                coefficient *= 2; // 85w
+            }
+            if (workbenchs[workbenchId].getProductStatus() || workbenchs[workbenchId].getRestFrame() > 0) {
+                coefficient *= 2; // 85w
+            }
+            
+            if (material_status) {
+                actual_time = move_time;
+                return move_time / coefficient;
+            }
+            else if (rest_time > 0 && full_count == 2 && workbenchs[workbenchId].getProductStatus() == 0) {
+                actual_time = calAllowWaitTime(rest_time, move_time, bench_type);
+                return actual_time / coefficient;
+            }
+        }
         else {
-            double coefficient = 1;
+            double coefficient = 1.0;
             // 材料格空余 且 7没有该材料
             if (material_status) {
                 for (auto bench : workbenchs_7) {
@@ -267,14 +300,6 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
                 }
             }
 
-            // 图2特化
-            if(map == 2) {
-                // 产品格上有产品
-                if (bench_type == 6 && (workbenchs[workbenchId].getProductStatus() || workbenchs[workbenchId].getRestFrame() > 0)) {
-                    coefficient *= 2;
-                }
-            }
-
             // 缺两个
             if (material_status) {
                 actual_time = move_time;
@@ -287,6 +312,7 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
             }
         }
     }
+    
     return INT_MAX;
 }
 
@@ -350,7 +376,7 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
         if (robots[robotId].getWorkbenchId() == workbenchId)
         {
             // 已经有产品
-            if (workbenchs[workbenchId].getProductStatus() == 1 || rest_time == 0) {
+            if (workbenchs[workbenchId].getProductStatus() == 1 ) {
                 return move_time;
             }
             // 正在生产
@@ -364,11 +390,11 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
                 return INT_MAX;
             }
             else {
-                if (workbenchs[workbenchId].getProductStatus() == 1 || rest_time == 0) {
-                    return move_time * 4; // 图12
+                if (workbenchs[workbenchId].getProductStatus() == 1 ) {
+                    return move_time * 4; 
                 }
                 else if (rest_time > 0) {
-                    return calAllowWaitTime(rest_time, move_time, bench_type) * 4; // 图12
+                    return calAllowWaitTime(rest_time, move_time, bench_type) * 4; 
                 }
                 //return INT_MAX-1;
             }
@@ -376,7 +402,7 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
     }
     else {
         // 已经有产品
-        if (workbenchs[workbenchId].getProductStatus() == 1 || rest_time == 0) {
+        if (workbenchs[workbenchId].getProductStatus() == 1) {
 
             // 7不在生产 且 7的该材料格没有被预订 
             /* for (auto bench7 : workbenchs_7) {
@@ -1018,14 +1044,13 @@ void checkCollision(const int& robotId) {
                 }
             }*/
             // 图1特化 67w8
-            if (map == 1) {
+            if (map == 1 || map == 2) {
                 // 在墙边
                 if (between_angle < PI / 3 && distance < RADUIS_FULL * 12 && robot.isBesideBoundary()) {
                     robots[robotId].forward(3);
                     robots[robotId].rotate(offset_angle / 2);
                 }
             }
-            
         }
     }
 }
