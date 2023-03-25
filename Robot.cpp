@@ -144,8 +144,7 @@ public:
 			lineSpeed = 1;
 		}*/
 
-		if (map == 0)
-		{
+		if (map == 0) {
 			if (abs(angleToTarget) > PI / 3) {
 				lineSpeed = 0;
 			}
@@ -172,6 +171,12 @@ public:
 			if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
 				lineSpeed = 0;
 			}
+			if (distance < JUDGE_DISTANCE * 5 && abs(angleToTarget) > PI / 3) {
+				lineSpeed = 0;
+			}
+			/*if ( abs(angleToTarget) > PI / 2) {
+				lineSpeed = 0;
+			}*/
 		}
 		// Í¼4ÌØ»¯
 		if (map == 4) {
@@ -279,6 +284,8 @@ private:
 	int count12;
 	int count23;
 	int count13;
+
+
 public:
 	Robot(int _robotId) :robotId(_robotId) {
 		workbenchId = -1;

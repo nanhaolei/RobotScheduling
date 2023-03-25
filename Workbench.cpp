@@ -154,10 +154,6 @@ public:
 	// 返回产品利润
 	double getProfit(double actual_time, int map = 0) {
 		double timeCoefficient = 1 - sqrt(1 - (1 - actual_time * FPS / 9000) * (1 - actual_time * FPS / 9000)) * 0.2 + 0.8;
-		// 图3特化
-		if (map == 3) {
-			timeCoefficient = 1;
-		}
 		int goods_type = this->type;
 		switch (goods_type)
 		{
