@@ -20,6 +20,30 @@ public:
 		printf("destroy %d\n", this->robotId);
 	}
 
+	// 计算机器人与工作台之间的距离
+	inline double calDistance(const Workbench& workbench) {
+		double r_coor_x = this->getCoordinateX();
+		double r_coor_y = this->getCoordinateY();
+		double w_coor_x = workbench.getCoordinateX();
+		double w_coor_y = workbench.getCoordinateY();
+		double dx = w_coor_x - r_coor_x;
+		double dy = w_coor_y - r_coor_y;
+		double distance = length(dx, dy);
+		return distance;
+	}
+
+	// 计算机器人与机器人之间的距离
+	inline double calDistance(const Robot& robot) {
+		double r_coor_x = this->getCoordinateX();
+		double r_coor_y = this->getCoordinateY();
+		double w_coor_x = robot.getCoordinateX();
+		double w_coor_y = robot.getCoordinateY();
+		double dx = w_coor_x - r_coor_x;
+		double dy = w_coor_y - r_coor_y;
+		double distance = length(dx, dy);
+		return distance;
+	}
+	
 	// 计算两个向量之间的夹角（单位为弧度）
 	inline double angleBetween(double dx1, double dy1, double dx2, double dy2) {
 		double len1 = length(dx1, dy1);
@@ -52,7 +76,7 @@ public:
 	}
 
 	// 计算角速度
-	inline double calAngleSpeed(const Workbench& workbench,double& angleToTarget) {
+	inline double calAngleSpeed(const Workbench& workbench, double& angleToTarget) {
 		double r_coor_x = this->getCoordinateX();
 		double r_coor_y = this->getCoordinateY();
 		double w_coor_x = workbench.getCoordinateX();
@@ -61,30 +85,6 @@ public:
 		angleToTarget = adjustDirection(w_coor_x, w_coor_y, r_coor_x, r_coor_y, this->getDirection());
 		double angleSpeed = angleToTarget / DELTATIME / 6;
 		return angleSpeed;
-	}
-
-	// 计算机器人与工作台之间的距离
-	inline double calDistance(const Workbench& workbench) {
-		double r_coor_x = this->getCoordinateX();
-		double r_coor_y = this->getCoordinateY();
-		double w_coor_x = workbench.getCoordinateX();
-		double w_coor_y = workbench.getCoordinateY();
-		double dx = w_coor_x - r_coor_x;
-		double dy = w_coor_y - r_coor_y;
-		double distance = length(dx, dy);
-		return distance;
-	}
-
-	// 计算机器人与机器人之间的距离
-	inline double calDistance(const Robot& robot) {
-		double r_coor_x = this->getCoordinateX();
-		double r_coor_y = this->getCoordinateY();
-		double w_coor_x = robot.getCoordinateX();
-		double w_coor_y = robot.getCoordinateY();
-		double dx = w_coor_x - r_coor_x;
-		double dy = w_coor_y - r_coor_y;
-		double distance = length(dx, dy);
-		return distance;
 	}
 
 	// 判断是否在墙边
@@ -109,15 +109,14 @@ public:
 			++this->waitSellFrame;
 		}
 		// 超出给定范围 或在墙边 或目标变更 则重置时间
-		if (distance > JUDGE_DISTANCE * 4 || isBesideBoundary() || this->targetBenchId!=workbench.getWorkbenchId()) {
+		if (distance > JUDGE_DISTANCE * 4 || isBesideBoundary() || this->targetBenchId != workbench.getWorkbenchId()) {
 			this->waitFrame = 0;
 			this->waitSellFrame = 0;
 		}
-
 	}
 
 	// 计算速度
-	void calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSpeed) {
+	void calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSpeed, int map=0) {
 		// 计算在工作台范围内的等待时间 超出允许等待时间让出位置
 		int allow_frame = 80;
 		calWaitFrame(workbench);
@@ -144,18 +143,46 @@ public:
 		else if (distance < JUDGE_DISTANCE * 2) {
 			lineSpeed = 1;
 		}*/
-		
-		// 在墙边 且转弯角度大于60
-		if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
-			lineSpeed = 0;
+
+		if(map == 0)
+		{
+			if (abs(angleToTarget) > PI / 3) {
+				lineSpeed = 0;
+			}
+			// 在墙边 且转弯角度大于60
+			//if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
+			//	lineSpeed = 0;
+			//}
+			//// 不在墙边 转弯角度大于90
+			//if (abs(angleToTarget) > PI / 2) {
+			//	lineSpeed = 0;
+			//}
 		}
+		// 图3特化
+		if (map == 3) {
+			if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
+				lineSpeed = 0;
+			}
+		}
+		// 图4特化
+		if (map == 4) {
+			if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
+				lineSpeed = 0;
+			}
+			if (distance < JUDGE_DISTANCE * 5 && abs(angleToTarget) > PI / 3) {
+				lineSpeed = 0;
+			}
+		}
+
+		
+		
 	}
 
 	// 移动
-	void move(Workbench& workbench) {
+	void move(Workbench& workbench, int map=0) {
 		int lineSpeed = 0;
 		double angleSpeed = 0;
-		calSpeed(workbench, lineSpeed, angleSpeed);
+		calSpeed(workbench, lineSpeed, angleSpeed, map);
 		this->forward(lineSpeed);
 		this->rotate(angleSpeed);
 
@@ -181,7 +208,7 @@ public:
 					workbench.setReservedGoods(this->goodsType, false);
 					workbench.setHoldGoods(this->goodsType, true);
 				}
-				
+
 				// 特殊情况下在工作台附近无限等待 时间超过150帧就走
 				if (this->waitSellFrame > 150) {
 					cerr << "err:wait unfinitly" << endl;
@@ -199,6 +226,7 @@ public:
 	inline int getCount() {
 		if (this->count == 0) {
 			this->count = 3;
+			//this->count = 6;
 		}
 		return this->count--;
 	}
