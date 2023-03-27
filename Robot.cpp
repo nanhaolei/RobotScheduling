@@ -148,7 +148,7 @@ public:
 			if (abs(angleToTarget) > PI / 3) {
 				lineSpeed = 0;
 			}
-			// 在墙边 且转弯角度大于60
+			//// 在墙边 且转弯角度大于60
 			//if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
 			//	lineSpeed = 0;
 			//}
@@ -174,9 +174,6 @@ public:
 			if (distance < JUDGE_DISTANCE * 5 && abs(angleToTarget) > PI / 3) {
 				lineSpeed = 0;
 			}
-			/*if ( abs(angleToTarget) > PI / 2) {
-				lineSpeed = 0;
-			}*/
 		}
 		// 图4特化
 		if (map == 4) {
@@ -246,7 +243,6 @@ public:
 		}
 		return this->count++;
 	}
-
 	inline int getCount12() {
 		if (this->count12 == 3) {
 			this->count12 = 1;

@@ -34,7 +34,6 @@ int map;
 
 // 目标冲突检测
 bool checkConflict(const int& robotId, const int& target_bench) {
-    //bool isSelected = false;
     int count = 0;
     int type = workbenchs[target_bench].getType();
     // 89不做冲突检测
@@ -97,7 +96,6 @@ double calAllowWaitTime(double rest_time, double move_time, int bench_type) {
 
 // 查找能收购该物品类型的工作台
 vector<Workbench*> findSellBenchs(const int& goods_type) {
-    //int goods_type = robots[robotId].getGoodsType();
     vector<Workbench*> workbenchs_n;
     switch (goods_type)
     {
@@ -390,10 +388,9 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
     double move_time = distance / speed * offset;
     double rest_time = workbenchs[workbenchId].getRestFrame() / static_cast<double>(FPS);
 
-    // 当不位于4567工作台上时 降低购买优先级
     int threshold = 8000;
     if (map == 3) threshold = 8500;
-
+    // 当不位于4567工作台上时 降低购买优先级
     if ((bench_type == 4 || bench_type == 5 || bench_type == 6 || bench_type == 7) && frameId < threshold) {
         // 位于工作台上
         if (robots[robotId].getWorkbenchId() == workbenchId)
@@ -419,7 +416,6 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
                 else if (rest_time > 0) {
                     return calAllowWaitTime(rest_time, move_time, bench_type) * 4; 
                 }
-                //return INT_MAX-1;
             }
         }
     }
@@ -480,7 +476,7 @@ int findBuyBench(const int& robotId, const vector<Workbench>& workbenchs_n) {
 }
 
 // 给定目标工作台类型 计算买到它缺失的材料并带过去的最快路线
-int findFastestBench(const int& robotId, const vector<Workbench*>& workbenchs_n) {
+int findFastestPath(const int& robotId, const vector<Workbench*>& workbenchs_n) {
     double min_time = INT_MAX;
     int target_bench = -1;
     int sell_benchId = -1;
@@ -549,7 +545,7 @@ int findFastestBench(const int& robotId, const vector<Workbench*>& workbenchs_n)
         }
     }
     if (target_bench == -1) {
-        std::cerr << "err:findBench:target_bench==-1" << endl;
+        std::cerr << "err:findFastestPath" << endl;
     }
     robots[robotId].setSellBenchId(sell_benchId);
     workbenchs[sell_benchId].setReservedGoods(workbenchs[target_bench].getType(), true);
@@ -602,43 +598,39 @@ int findMaterial(const int& robotId, int goods_type, const int& sell_bench) {
     case 4:
         target_bench = findBuyBench(robotId, workbenchs_4);
         // 该产品还没有被生产
-        if (target_bench == -1)
-        {
+        if (target_bench == -1) {
             // 找买入卖出总时间最短的一条路径 带合成所需材料回来
-            target_bench = findFastestBench(robotId, workbenchs_4);
+            target_bench = findFastestPath(robotId, workbenchs_4);
         }
         // 指定了买到后带回的工作台
-        else if (sell_bench != -1) {
+        if (sell_bench != -1) {
             robots[robotId].setSellBenchId(sell_bench);
             workbenchs[sell_bench].setReservedGoods(workbenchs[target_bench].getType(), true);
         }
         break;
     case 5:
         target_bench = findBuyBench(robotId, workbenchs_5);
-        if (target_bench == -1)
-        {
-            target_bench = findFastestBench(robotId, workbenchs_5);
+        if (target_bench == -1) {
+            target_bench = findFastestPath(robotId, workbenchs_5);
         }
-        else if (sell_bench != -1) {
+        if (sell_bench != -1) {
             robots[robotId].setSellBenchId(sell_bench);
             workbenchs[sell_bench].setReservedGoods(workbenchs[target_bench].getType(), true);
         }
         break;
     case 6:
         target_bench = findBuyBench(robotId, workbenchs_6);
-        if (target_bench == -1)
-        {
-            target_bench = findFastestBench(robotId, workbenchs_6);
+        if (target_bench == -1) {
+            target_bench = findFastestPath(robotId, workbenchs_6);
         }
-        else if (sell_bench != -1) {
+        if (sell_bench != -1) {
             robots[robotId].setSellBenchId(sell_bench);
             workbenchs[sell_bench].setReservedGoods(workbenchs[target_bench].getType(), true);
         }
         break;
     case 7:
         target_bench = findBuyBench(robotId, workbenchs_7);
-        if (target_bench == -1)
-        {
+        if (target_bench == -1) {
             // 判断最近的一个7号工作台缺哪个材料 去买这个材料
             workbenchId = findClosetBench(robotId, workbenchs_7);
             goods_type = workbenchs[workbenchId].getLostMaterial();
@@ -957,7 +949,6 @@ bool compare_time(const int& robotId, const int& buy_bench_id) {
 }
 
 // 碰撞检测
-// to do:有多个机器人在检测范围内 考虑最近的一个?
 void checkCollision(const int& robotId) {
     // 特殊情况下在墙边 不检测
     /*if (robots[robotId].isBesideBoundary()) {
@@ -1057,6 +1048,7 @@ void checkCollision(const int& robotId) {
                 }*/
 
                 // 距离非常接近减速
+                // TODO：范围调大一点
                 if (distance < spped_check_distance) {
                     robots[robotId].forward(3);
                 }
@@ -1067,7 +1059,7 @@ void checkCollision(const int& robotId) {
                 robots[robotId].rotate(offset_angle);
             }
             
-            // 图1特化 
+            // 在墙边
             if (map == 1 || map == 2) {
                 if (between_angle < PI / 3 && distance < RADUIS_FULL * 12 && robot.isBesideBoundary()) {
                     robots[robotId].forward(3);
