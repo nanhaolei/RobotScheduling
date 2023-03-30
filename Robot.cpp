@@ -204,9 +204,6 @@ public:
 					this->targetBenchId = -1;
 					workbench.setProductStatus(0);
 				}
-				/*this->buy();
-				this->targetBenchId = -1;
-				workbench.setProductStatus(0);*/
 			}
 			// Âô
 			else {

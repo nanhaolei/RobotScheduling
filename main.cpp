@@ -31,7 +31,7 @@ int workbench_num_7 = 0;
 int workbench_num_8 = 0;
 int workbench_num_9 = 0;
 int frameId = 0;
-int map;
+int map = 0;
 
 // 目标冲突检测
 bool checkConflict(const int& robotId, const int& target_bench) {
@@ -684,19 +684,10 @@ int unitProfitFirst(const int& robotId, const bool& last = false) {
 
     robots[robotId].setSellBenchId(sell_bench_id);
 
-    if (map == 3) {
-        // 卖出目标不为8，9 设置预订标记
-        if (workbenchs[sell_bench_id].getType() != 8 && workbenchs[sell_bench_id].getType() != 9) {
-            workbenchs[sell_bench_id].setReservedGoods(workbenchs[buy_bench_id].getType(), true);
-        }
-    }
-    else {
-        workbenchs[sell_bench_id].setReservedGoods(workbenchs[buy_bench_id].getType(), true);
-    }
     // 卖出目标不为8，9 设置预订标记
-    /*if (workbenchs[sell_bench_id].getType() != 8 && workbenchs[sell_bench_id].getType() != 9) {
+    if (workbenchs[sell_bench_id].getType() != 8 && workbenchs[sell_bench_id].getType() != 9) {
         workbenchs[sell_bench_id].setReservedGoods(workbenchs[buy_bench_id].getType(), true);
-    }*/
+    }
     
     return buy_bench_id;
 }
@@ -1092,31 +1083,9 @@ void action() {
         if (target_bench == -1) {
             continue;
         }
-        /*if (frameId > 1694 && frameId < 1700 && robotId == 1) {
-            cerr << "frame:" << frameId << endl;
-            cerr << "robot:" << robotId << endl;
-            cerr << "target:" << target_bench << endl;
-            cerr << "target:" << robots[robotId].getTargetBenchId() << endl;
-            cerr << "goods:" << robots[robotId].getGoodsType() << endl;
-        }*/
 
         robots[robotId].setTargetBenchId(target_bench);
-        // 图1特化
-        if (map == 1) {
-            robots[robotId].move(workbenchs[target_bench], map);
-        }
-        // 图3特化
-        else if (map == 3) {
-            robots[robotId].move(workbenchs[target_bench], map);
-        }
-        // 图4特化
-        else if (map == 4)
-        {
-            robots[robotId].move(workbenchs[target_bench], map);
-        }
-        else {
-            robots[robotId].move(workbenchs[target_bench]);
-        }
+        robots[robotId].move(workbenchs[target_bench], map);
         checkCollision(robotId);
     }
 }
