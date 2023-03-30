@@ -81,7 +81,6 @@ public:
 		double r_coor_y = this->getCoordinateY();
 		double w_coor_x = workbench.getCoordinateX();
 		double w_coor_y = workbench.getCoordinateY();
-		//double angleToTarget = adjustDirection(w_coor_x, w_coor_y, r_coor_x, r_coor_y, this->getDirection());
 		angleToTarget = adjustDirection(w_coor_x, w_coor_y, r_coor_x, r_coor_y, this->getDirection());
 		double angleSpeed = angleToTarget / DELTATIME / 6;
 		return angleSpeed;
@@ -195,8 +194,7 @@ public:
 		this->forward(lineSpeed);
 		this->rotate(angleSpeed);
 
-		this->targetBenchId = workbench.getWorkbenchId();
-		// 到达目标工作台
+		// 已到达目标工作台
 		if (this->workbenchId == this->targetBenchId) {
 			// 买
 			if (this->goodsType == 0) {
@@ -206,11 +204,14 @@ public:
 					this->targetBenchId = -1;
 					workbench.setProductStatus(0);
 				}
+				/*this->buy();
+				this->targetBenchId = -1;
+				workbench.setProductStatus(0);*/
 			}
 			// 卖
 			else {
 				// 材料格还没空出来则等待
-				if (workbench.checkMaterialStatus(this->goodsType)) {
+				if (!workbench.getHoldGoods(this->goodsType)) {
 					this->sell();
 					this->targetBenchId = -1;
 					this->sellBenchId = -1;
@@ -233,33 +234,33 @@ public:
 
 	// 令count循环
 	inline int getCount() {
-		//if (this->count == 0) {
-		//	this->count = 3;
-		//	//this->count = 6;
-		//}
-		//return this->count--;
 		if (this->count == 4) {
 			this->count = 1;
 		}
 		return this->count++;
 	}
 	inline int getCount12() {
-		if (this->count12 == 3) {
-			this->count12 = 1;
+		if (this->count == 3) {
+			this->count = 1;
 		}
-		return this->count12++;
+		return this->count++;
 	}
 	inline int getCount23() {
-		if (this->count23 == 4) {
-			this->count23 = 2;
+		if (this->count == 1) {
+			this->count++;
 		}
-		return this->count23++;
+		if (this->count == 4) {
+			this->count = 2;
+		}
+		return this->count++;
 	}
 	inline int getCount13() {
-		if (this->count13 == 5) {
-			this->count13 = 1;
+		if (this->count == 5) {
+			this->count = 1;
 		}
-		return this->count13+=2;
+		int count = this->count;
+		this->count += 2;
+		return count;
 	}
 
 private:
@@ -277,10 +278,6 @@ private:
 	int waitFrame;
 	int count;
 	int waitSellFrame;
-	int count12;
-	int count23;
-	int count13;
-
 
 public:
 	Robot(int _robotId) :robotId(_robotId) {
@@ -298,12 +295,9 @@ public:
 		targetBenchId = -1;
 		sellBenchId = -1;
 		waitFrame = 0;
-		count = 1;
 		waitSellFrame = 0;
 
-		count12 = 1;
-		count23 = 2;
-		count13 = 1;
+		count = 1;
 	};
 	~Robot() {};
 	int getRobotId() const { return robotId; }

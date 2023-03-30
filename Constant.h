@@ -14,4 +14,9 @@ constexpr auto MAX_TORQUE = 50;
 constexpr auto DELTATIME = 0.02;
 constexpr auto MASS_EMPTY = PI * RADUIS_EMPTY * RADUIS_EMPTY * DENSITY;
 constexpr auto MASS_FULL = PI * RADUIS_FULL * RADUIS_FULL * DENSITY;
+constexpr auto TOTAL_FRAME = 9000;
+
+constexpr int ROBOT_SIZE = 4;
+constexpr int GOODS_TYPE_SIZE = 7;
+constexpr int WORKBENCH_TYPE_SIZE = 9;
 

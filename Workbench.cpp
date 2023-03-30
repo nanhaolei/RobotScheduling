@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <random>
 #include "constant.h"
-#include "utils.cpp"
+#include "utils.h"
 using namespace std;
 
 class Workbench {
@@ -21,7 +21,7 @@ public:
 	}
 
 	// 检查该材料格是否空余
-	bool checkMaterialStatus(const int& goodsType) {
+	/*bool checkMaterialStatus(const int& goodsType) {
 		int materialStatus = this->getMaterialStatus();
 		int i = 0;
 		vector<int> binary(8, 0);
@@ -37,8 +37,6 @@ public:
 			return false;
 		}
 	}
-
-	// 检查该材料格是否空余 并返回空余情况
 	bool checkMaterialStatus(const int& goodsType, vector<int>& binary) {
 		int materialStatus = this->getMaterialStatus();
 		int i = 0;
@@ -53,7 +51,7 @@ public:
 		else {
 			return false;
 		}
-	}
+	}*/
 
 	// 返回缺失的材料
 	int getLostMaterial() {
@@ -153,7 +151,7 @@ public:
 
 	// 返回产品利润
 	double getProfit(double actual_time) {
-		double timeCoefficient = 1 - sqrt(1 - (1 - actual_time * FPS / 9000) * (1 - actual_time * FPS / 9000)) * 0.2 + 0.8;
+		double timeCoefficient = 1 - sqrt(1 - (1 - actual_time * FPS / TOTAL_FRAME) * (1 - actual_time * FPS / TOTAL_FRAME)) * 0.2 + 0.8;
 		int goods_type = this->type;
 		switch (goods_type)
 		{
@@ -209,9 +207,7 @@ public:
 			{4,false},
 			{5,false},
 			{6,false},
-			{7,false},
-			{8,false},
-			{9,false}
+			{7,false}
 		};
 		holdGoods = {
 			{1,false},
@@ -220,9 +216,7 @@ public:
 			{4,false},
 			{5,false},
 			{6,false},
-			{7,false},
-			{8,false},
-			{9,false}
+			{7,false}
 		};
 	};
 	~Workbench() {};
@@ -236,42 +230,41 @@ public:
 	void setCoordinateY(double y) { coordinate[1] = y; }
 	int getRestFrame() const { return restFrame; }
 	void setRestFrame(int rt) { restFrame = rt; }
-	int getMaterialStatus() const { return materialStatus; }
-	// to do:bug
-	void setMaterialStatus(int ms) {
-		materialStatus = ms;
-		int i = 0;
-		vector<int> binary(8, 0);
-		while (ms > 0) {
-			binary[i] = ms % 2;
-			ms /= 2;
-			++i;
-		}
-		for (int i = 1; i < 8; ++i) {
-			if (binary[i] == 1) {
-				holdGoods[i] = true;
-			}
-			else {
-				holdGoods[i] = false;
-			}
-		}
-		/*while (ms > 0) {
-			if (ms % 2 == 1) {
-				holdGoods[i] = true;
-			}
-			else {
-				holdGoods[i] = false;
-			}
-			ms /= 2;
-			++i;
-		}*/
-	}
 	int getProductStatus() const { return productStatus; }
 	void setProductStatus(int ps) { productStatus = ps; }
 	bool getReservedGoods(int goods) { return reservedGoods[goods]; }
 	void setReservedGoods(int goods, bool status) { reservedGoods[goods] = status; }
 	bool getHoldGoods(int goods) { return holdGoods[goods]; }
 	void setHoldGoods(int goods, bool status) { holdGoods[goods] = status; }
+	int getMaterialStatus() const { return materialStatus; }
+	void setMaterialStatus(int ms) {
+		materialStatus = ms;
+		
+		if (ms == 0) {
+			for (int i = 1; i <= GOODS_TYPE_SIZE; ++i) {
+				holdGoods[i] = false;
+			}
+			return;
+		}
+		int i = 0;
+		while (ms > 0) {
+			if (ms % 2 == 1) {
+				holdGoods[i++] = true;
+			}
+			else {
+				holdGoods[i++] = false;
+			}
+			ms /= 2;
+		}
+	}
+	int getFullCount() {
+		int count = 0;
+		for (int i = 1; i <= GOODS_TYPE_SIZE; i++) {
+			if (holdGoods[i])
+				count++;
+		}
+		return count;
+	}
 
 	void print() const {
 		std::cerr << "workbenchId: " << workbenchId << std::endl;
