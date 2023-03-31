@@ -5,8 +5,8 @@
 #include <queue>
 #include <cmath>
 #include <climits>
-#include "Robot.cpp"
 #include <cassert>
+#include "robot.h"
 using namespace std;
 
 vector<Workbench> workbenchs;

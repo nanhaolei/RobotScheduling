@@ -1,3 +1,6 @@
+#ifndef CONSTANT_H_
+#define CONSTANT_H_
+
 constexpr auto FPS = 50;
 constexpr auto JUDGE_DISTANCE = 0.4;
 constexpr auto RADUIS_EMPTY = 0.45;
@@ -20,3 +23,4 @@ constexpr int ROBOT_SIZE = 4;
 constexpr int GOODS_TYPE_SIZE = 7;
 constexpr int WORKBENCH_TYPE_SIZE = 9;
 
+#endif
