@@ -191,8 +191,8 @@ private:
 	int restFrame;
 	int materialStatus;
 	int productStatus;
-	unordered_map <int, bool> reservedGoods;
-	unordered_map <int, bool> holdGoods;
+	unordered_map <int, bool> reservedMaterial;
+	unordered_map <int, bool> holdMaterial;
 public:
 	Workbench(int _workbenchId, int _type) :workbenchId(_workbenchId), type(_type) {
 		coordinate[0] = 0;
@@ -200,7 +200,7 @@ public:
 		restFrame = -1;
 		materialStatus = 0;
 		productStatus = 0;
-		reservedGoods = {
+		reservedMaterial = {
 			{1,false},
 			{2,false},
 			{3,false},
@@ -209,7 +209,7 @@ public:
 			{6,false},
 			{7,false}
 		};
-		holdGoods = {
+		holdMaterial = {
 			{1,false},
 			{2,false},
 			{3,false},
@@ -232,27 +232,27 @@ public:
 	void setRestFrame(int rt) { restFrame = rt; }
 	int getProductStatus() const { return productStatus; }
 	void setProductStatus(int ps) { productStatus = ps; }
-	bool getReservedGoods(int goods) { return reservedGoods[goods]; }
-	void setReservedGoods(int goods, bool status) { reservedGoods[goods] = status; }
-	bool getHoldGoods(int goods) { return holdGoods[goods]; }
-	void setHoldGoods(int goods, bool status) { holdGoods[goods] = status; }
+	bool getReservedMaterial(int goods) { return reservedMaterial[goods]; }
+	void setReservedMaterial(int goods, bool status) { reservedMaterial[goods] = status; }
+	bool getHoldMaterial(int goods) { return holdMaterial[goods]; }
+	void setHoldMaterial(int goods, bool status) { holdMaterial[goods] = status; }
 	int getMaterialStatus() const { return materialStatus; }
 	void setMaterialStatus(int ms) {
 		materialStatus = ms;
 		
 		if (ms == 0) {
 			for (int i = 1; i <= GOODS_TYPE_SIZE; ++i) {
-				holdGoods[i] = false;
+				holdMaterial[i] = false;
 			}
 			return;
 		}
 		int i = 0;
 		while (ms > 0) {
 			if (ms % 2 == 1) {
-				holdGoods[i++] = true;
+				holdMaterial[i++] = true;
 			}
 			else {
-				holdGoods[i++] = false;
+				holdMaterial[i++] = false;
 			}
 			ms /= 2;
 		}
@@ -260,7 +260,7 @@ public:
 	int getFullCount() {
 		int count = 0;
 		for (int i = 1; i <= GOODS_TYPE_SIZE; i++) {
-			if (holdGoods[i])
+			if (holdMaterial[i])
 				count++;
 		}
 		return count;

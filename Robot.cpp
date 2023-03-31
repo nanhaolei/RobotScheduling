@@ -208,12 +208,12 @@ public:
 			// 卖
 			else {
 				// 材料格还没空出来则等待
-				if (!workbench.getHoldGoods(this->goodsType)) {
+				if (!workbench.getHoldMaterial(this->goodsType)) {
 					this->sell();
 					this->targetBenchId = -1;
 					this->sellBenchId = -1;
-					workbench.setReservedGoods(this->goodsType, false);
-					workbench.setHoldGoods(this->goodsType, true);
+					workbench.setReservedMaterial(this->goodsType, false);
+					workbench.setHoldMaterial(this->goodsType, true);
 				}
 
 				// 特殊情况下在工作台附近无限等待 时间超过150帧就走
@@ -222,7 +222,7 @@ public:
 					//this->sell();
 					this->targetBenchId = -1;
 					this->sellBenchId = -1;
-					workbench.setReservedGoods(this->goodsType, false);
+					workbench.setReservedMaterial(this->goodsType, false);
 				}
 
 			}
