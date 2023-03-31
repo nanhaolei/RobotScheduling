@@ -1127,6 +1127,7 @@ int main() {
 
         action();
         //if (frame_id > 50) action();
+
         printf("OK\n");
         fflush(stdout);
     }

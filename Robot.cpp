@@ -219,7 +219,7 @@ void Robot::move(Workbench& workbench, int map) {
 }
 
 // 碰撞检测
-void Robot::checkCollision(const vector<Robot>& robots, int map) {
+void Robot::checkCollision(vector<Robot> robots, int map) {
 	// 特殊情况下在墙边 不检测
 	if (map == 3) {
 		if (this->isBesideBoundary()) {
