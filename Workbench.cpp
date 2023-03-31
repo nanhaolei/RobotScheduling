@@ -9,7 +9,7 @@ double Workbench::calDistance(const Workbench& workbench) {
 	double w_coor_y = workbench.getCoordinateY();
 	double dx = w_coor_x - r_coor_x;
 	double dy = w_coor_y - r_coor_y;
-	double distance = length(dx, dy);
+	double distance = sqrt(dx * dx + dy * dy);
 	return distance;
 }
 

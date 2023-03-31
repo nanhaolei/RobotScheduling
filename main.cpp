@@ -891,128 +891,6 @@ bool compareTime(const int& robotId, const int& buy_bench_id) {
     }
 }
 
-// 碰撞检测
-void checkCollision(const int& robotId) {
-    // 特殊情况下在墙边 不检测
-    if (map == 3) {
-        if (robots[robotId].isBesideBoundary()) {
-            return;
-        }
-    }
-    double offset_angle = PI / 1.1;
-    double cur_dirction[2]{ cos(robots[robotId].getDirection()),sin(robots[robotId].getDirection()) };
-    double cur_coor[2]{ robots[robotId].getCoordinateX(),robots[robotId].getCoordinateY() };
-
-    for (auto& robot : robots) {
-        double distance = robot.calDistance(robots[robotId]);
-        double check_distance = 4.5;
-        double spped_check_distance = 2;
-        double check_angle = PI / 8;
-        //double ratio = distance > 5 ? 5 : distance;
-        //double check_distance = RADUIS_FULL * 2.1 * ratio;
-        //double check_angle = PI / 2 / ratio;
-        //double check_angle = PI / 2 + 1.0 / 4 + 1 / (ratio - 5);
-        //double check_angle = PI * 3 / 5 - ratio * PI / 10;
-
-        if (robot.getRobotId() != robotId) {
-            double other_coor[2]{ robot.getCoordinateX(),robot.getCoordinateY() };
-            // 计算当前机器人朝向和目标位置之间的叉乘
-            double dx = other_coor[0] - cur_coor[0];
-            double dy = other_coor[1] - cur_coor[1];
-            double dir[2]{ dx / length(dx, dy) , dy / length(dx, dy) };
-            double cross = cur_dirction[0] * dir[1] - cur_dirction[1] * dir[0]; // A×B为正 B在A的逆时针方向 否则顺时针方向 
-
-            // 计算当前机器人朝向和目标位置之间的夹角
-            double cos = cur_dirction[0] * dir[0] + cur_dirction[1] * dir[1];
-            if (cos < -1) { cos = -1; }
-            if (cos > 1) { cos = 1; }
-            double between_angle = acos(cos);
-
-            // 计算角度差
-            double cur_angle = robots[robotId].getDirection() > 0 ? robots[robotId].getDirection() : robots[robotId].getDirection() + 2 * PI;
-            double other_angle = robot.getDirection() > 0 ? robot.getDirection() : robot.getDirection() + 2 * PI;
-            double dif = abs(cur_angle - other_angle); // 角度差
-
-            // 只检测当前朝向一定范围内的扇形区域
-            if (between_angle < check_angle && distance < check_distance) {
-                if (PI / 2 <= dif && dif < PI * 5 / 8) {
-                    robots[robotId].rotate(-offset_angle);
-                }
-                else if (PI * 11 / 8 < dif && dif <= PI * 3 / 2) {
-                    robots[robotId].rotate(offset_angle);
-                }
-                else if (PI * 5 / 8 <= dif && dif <= PI * 11 / 8)
-                {
-                    if (cross > 0) {
-                        robots[robotId].rotate(-offset_angle);
-                    }
-                    else {
-                        robots[robotId].rotate(offset_angle);
-                    }
-                }
-
-                /*if (cross > 0) {
-                    robots[robotId].rotate(-offset_angle);
-                }
-                else {
-                    robots[robotId].rotate(offset_angle);
-                }
-                if (PI / 2  <= dif && dif < PI) {
-                    robots[robotId].rotate(-offset_angle);
-                }
-                else if (PI <= dif && dif <= PI * 3 / 2 ) {
-                    robots[robotId].rotate(offset_angle);
-                }*/
-
-                /*if (cross > 0) {
-                    if(PI /2 <=dif && dif <= PI)
-                    {
-                        robots[robotId].rotate(-offset_angle);
-                    }
-                    else if(dif <= PI  && dif <= PI * 3/2) {
-                        robots[robotId].rotate(offset_angle);
-                    }
-                }
-                else {
-                    if (PI  <= dif && dif <= PI * 3/2)
-                    {
-                        robots[robotId].rotate(offset_angle);
-                    }
-                    else if(PI / 2 <= dif && dif <= PI) {
-                        robots[robotId].rotate(-offset_angle);
-                    }
-                }*/
-
-                // 距离非常接近减速
-                // TODO：范围调大一点
-                if (distance < spped_check_distance) {
-                    robots[robotId].forward(3);
-                }
-            }
-            
-            // 特殊情况下两个一直对向贴在一起
-            if (distance < RADUIS_FULL * 2.1 && PI / 2 <= dif && dif < PI * 3 / 2) {
-                robots[robotId].rotate(offset_angle);
-            }
-            
-            // 同时去墙边
-            if (map == 1 || map == 2) {
-                if (between_angle < PI / 3 && distance < RADUIS_FULL * 12 && robot.isBesideBoundary()) {
-                    robots[robotId].forward(3);
-                    robots[robotId].rotate(offset_angle / 2);
-                }
-            }
-            // 同时去一个工作台
-            if(map == 3) {
-                if (between_angle < PI / 3 && distance < RADUIS_FULL * 12 && robot.getTargetBenchId() == robots[robotId].getTargetBenchId()) {
-                    robots[robotId].forward(3);
-                    robots[robotId].rotate(offset_angle / 2);
-                }
-            }
-        }
-    }
-}
-
 void action() {
     for (int robotId = 0; robotId < ROBOT_SIZE; robotId++) {
         int target_bench = robots[robotId].getTargetBenchId();
@@ -1086,7 +964,7 @@ void action() {
 
         robots[robotId].setTargetBenchId(target_bench);
         robots[robotId].move(workbenchs[target_bench], map);
-        checkCollision(robotId);
+        robots[robotId].checkCollision(robots, map);
     }
 }
 

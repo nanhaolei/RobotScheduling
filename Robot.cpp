@@ -10,7 +10,7 @@ double Robot::calDistance(const Workbench& workbench) {
 	double w_coor_y = workbench.getCoordinateY();
 	double dx = w_coor_x - r_coor_x;
 	double dy = w_coor_y - r_coor_y;
-	double distance = length(dx, dy);
+	double distance = sqrt(dx * dx + dy * dy);
 	return distance;
 }
 
@@ -22,14 +22,14 @@ double Robot::calDistance(const Robot& robot) {
 	double w_coor_y = robot.getCoordinateY();
 	double dx = w_coor_x - r_coor_x;
 	double dy = w_coor_y - r_coor_y;
-	double distance = length(dx, dy);
+	double distance = sqrt(dx * dx + dy * dy);
 	return distance;
 }
 
 // 计算两个向量之间的夹角（单位为弧度）
 double Robot::angleBetween(double dx1, double dy1, double dx2, double dy2) {
-	double len1 = length(dx1, dy1);
-	double len2 = length(dx2, dy2);
+	double len1 = sqrt(dx1 * dx1 + dy1 * dy1);
+	double len2 = sqrt(dx2 * dx2 + dy2 * dy2);
 	double dot = dx1 * dx2 + dy1 * dy2;
 	double cos = dot / (len1 * len2);
 	if (cos < -1) {
@@ -109,7 +109,7 @@ void Robot::calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSp
 
 	// 计算运动速度
 	double distance = calDistance(workbench);
-	double cur_speed = length(this->lineSpeed[0], this->lineSpeed[1]);
+	double cur_speed = sqrt(this->lineSpeed[0] * this->lineSpeed[0] + this->lineSpeed[1] * this->lineSpeed[1]); 
 	double angleToTarget;
 	angleSpeed = calAngleSpeed(workbench, angleToTarget);
 	lineSpeed = MAX_FORWARD_SPEED;
@@ -137,6 +137,13 @@ void Robot::calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSp
 		//if (abs(angleToTarget) > PI / 2) {
 		//	lineSpeed = 0;
 		//}
+	}
+
+	// 图2特化
+	if (map == 2) {
+		if (abs(angleToTarget) > PI / 3) {
+			lineSpeed = 0;
+		}
 	}
 	// 图1特化
 	if (map == 1) {
@@ -207,6 +214,128 @@ void Robot::move(Workbench& workbench, int map) {
 				workbench.setReservedMaterial(this->goodsType, false);
 			}
 
+		}
+	}
+}
+
+// 碰撞检测
+void Robot::checkCollision(const vector<Robot>& robots, int map) {
+	// 特殊情况下在墙边 不检测
+	if (map == 3) {
+		if (this->isBesideBoundary()) {
+			return;
+		}
+	}
+	double offset_angle = PI / 1.1;
+	double cur_dirction[2]{ cos(this->getDirection()),sin(this->getDirection()) };
+	double cur_coor[2]{ this->getCoordinateX(),this->getCoordinateY() };
+
+	for (auto& robot : robots) {
+		double distance = this->calDistance(robot);
+		double check_distance = 4.5;
+		double spped_check_distance = 2;
+		double check_angle = PI / 8;
+		//double ratio = distance > 5 ? 5 : distance;
+		//double check_distance = RADUIS_FULL * 2.1 * ratio;
+		//double check_angle = PI / 2 / ratio;
+		//double check_angle = PI / 2 + 1.0 / 4 + 1 / (ratio - 5);
+		//double check_angle = PI * 3 / 5 - ratio * PI / 10;
+
+		if (robot.getRobotId() != this->robotId) {
+			double other_coor[2]{ robot.getCoordinateX(),robot.getCoordinateY() };
+			// 计算当前机器人朝向和目标位置之间的叉乘
+			double dx = other_coor[0] - cur_coor[0];
+			double dy = other_coor[1] - cur_coor[1];
+			double dir[2]{ dx / sqrt(dx * dx + dy * dy), dy / sqrt(dx * dx + dy * dy) };
+			double cross = cur_dirction[0] * dir[1] - cur_dirction[1] * dir[0]; // A×B为正 B在A的逆时针方向 否则顺时针方向 
+
+			// 计算当前机器人朝向和目标位置之间的夹角
+			double cos = cur_dirction[0] * dir[0] + cur_dirction[1] * dir[1];
+			if (cos < -1) { cos = -1; }
+			if (cos > 1) { cos = 1; }
+			double between_angle = acos(cos);
+
+			// 计算角度差
+			double cur_angle = this->getDirection() > 0 ? this->getDirection() : this->getDirection() + 2 * PI;
+			double other_angle = robot.getDirection() > 0 ? robot.getDirection() : robot.getDirection() + 2 * PI;
+			double dif = abs(cur_angle - other_angle); // 角度差
+
+			// 只检测当前朝向一定范围内的扇形区域
+			if (between_angle < check_angle && distance < check_distance) {
+				if (PI / 2 <= dif && dif < PI * 5 / 8) {
+					this->rotate(-offset_angle);
+				}
+				else if (PI * 11 / 8 < dif && dif <= PI * 3 / 2) {
+					this->rotate(offset_angle);
+				}
+				else if (PI * 5 / 8 <= dif && dif <= PI * 11 / 8)
+				{
+					if (cross > 0) {
+						this->rotate(-offset_angle);
+					}
+					else {
+						this->rotate(offset_angle);
+					}
+				}
+
+				/*if (cross > 0) {
+					this->rotate(-offset_angle);
+				}
+				else {
+					this->rotate(offset_angle);
+				}
+				if (PI / 2  <= dif && dif < PI) {
+					this->rotate(-offset_angle);
+				}
+				else if (PI <= dif && dif <= PI * 3 / 2 ) {
+					this->rotate(offset_angle);
+				}*/
+
+				/*if (cross > 0) {
+					if(PI /2 <=dif && dif <= PI)
+					{
+						this->rotate(-offset_angle);
+					}
+					else if(dif <= PI  && dif <= PI * 3/2) {
+						this->rotate(offset_angle);
+					}
+				}
+				else {
+					if (PI  <= dif && dif <= PI * 3/2)
+					{
+						this->rotate(offset_angle);
+					}
+					else if(PI / 2 <= dif && dif <= PI) {
+						this->rotate(-offset_angle);
+					}
+				}*/
+
+				// 距离非常接近减速
+				// TODO：范围调大一点
+				if (distance < spped_check_distance) {
+					this->forward(3);
+				}
+			}
+
+			// 特殊情况下两个一直对向贴在一起
+			if (distance < RADUIS_FULL * 2.1 && PI / 2 <= dif && dif < PI * 3 / 2) {
+				this->rotate(offset_angle);
+			}
+
+			// 同时去墙边
+			if (map == 1 || map == 2) {
+				if (between_angle < PI / 3 && distance < RADUIS_FULL * 12 && robot.isBesideBoundary()) {
+					this->forward(3);
+					this->rotate(offset_angle / 2);
+				}
+			}
+			// 同时去一个工作台
+			if (map == 3) {
+				if (between_angle < PI / 3 && distance < RADUIS_FULL * 12 && robot.getTargetBenchId() == this->getTargetBenchId()) {
+					this->forward(3);
+					this->rotate(offset_angle / 2);
+				}
+			}
 		}
 	}
 }

@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <random>
 #include "constant.h"
-#include "utils.h"
 using namespace std;
 
 class Workbench {

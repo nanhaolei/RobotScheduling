@@ -34,6 +34,9 @@ public:
 	// ÒÆ¶¯
 	void move(Workbench& workbench, int map = 0);
 
+	// Åö×²¼ì²â
+	void checkCollision(const vector<Robot>& robots, int map = 0);
+
 	// ÁîcountÑ­»·
 	int getCount();
 	int getCount12();
