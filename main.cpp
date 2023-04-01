@@ -7,6 +7,7 @@
 #include <climits>
 #include <cassert>
 #include "robot.h"
+#include "graph.h"
 using namespace std;
 
 vector<Workbench> workbenchs;
@@ -31,7 +32,8 @@ int workbench_num_7 = 0;
 int workbench_num_8 = 0;
 int workbench_num_9 = 0;
 int frame_id = 0;
-int map = 0;
+char map[MAP_SIZE][MAP_SIZE];
+int cur_map = 0;
 
 // 目标冲突检测
 bool checkConflict(const int& robotId, const int& target_bench) {
@@ -213,7 +215,7 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
     // 456工作台
     else if ((bench_type == 4 || bench_type == 5 || bench_type == 6)) {
         // 图4特化
-        if (map == 4) {
+        if (cur_map == 4) {
             double coefficient = 1.0;
             if (bench_type == 4) {
                 coefficient *= 12; 
@@ -240,7 +242,7 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
             return INT_MAX;
         }
         // 图2特化
-        else if (map == 2) {
+        else if (cur_map == 2) {
             double coefficient = 1.0;
             bool sell = material_status || (rest_time > 0 && full_count == 2 && workbenchs[workbenchId].getProductStatus() == 0);
             if (!sell) return INT_MAX;
@@ -271,7 +273,7 @@ double calSellPriority(const double& distance, const int& workbenchId, const int
             }
         }
         // 图3特化
-        else if (map == 3) {
+        else if (cur_map == 3) {
             // 456工作台材料格空余 且 只缺一个
             if (full_count == 1 && material_status) {
                 actual_time = move_time;
@@ -386,7 +388,7 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
     double rest_time = workbenchs[workbenchId].getRestFrame() / static_cast<double>(FPS);
 
     int threshold = 8000;
-    if (map == 3) threshold = 8500;
+    if (cur_map == 3) threshold = 8500;
     // 当不位于4567工作台上时 降低购买优先级
     if ((bench_type == 4 || bench_type == 5 || bench_type == 6 || bench_type == 7) && frame_id < threshold) {
         // 位于工作台上
@@ -917,15 +919,15 @@ void action() {
                 }*/
 
                 // 图1特化
-                if (map == 1) {
+                if (cur_map == 1) {
                     target_bench = fixPath(robotId);
                 }
                 // 图3特化
-                else if (map == 3) {
+                else if (cur_map == 3) {
                     target_bench = unitProfitFirst(robotId);
                 }
                 // 图4特化
-                else if (map == 4) {
+                else if (cur_map == 4) {
                     if (robotId == 1) {
                         target_bench = findMaterial(1, 4, 0);
                     }
@@ -963,8 +965,8 @@ void action() {
         }
 
         robots[robotId].setTargetBenchId(target_bench);
-        robots[robotId].move(workbenchs[target_bench], map);
-        robots[robotId].checkCollision(robots, map);
+        robots[robotId].move(workbenchs[target_bench], cur_map);
+        robots[robotId].checkCollision(robots, cur_map);
     }
 }
 
@@ -972,12 +974,13 @@ bool readMap() {
     char line[1024];
     int workbenchId = 0;
     int robotId = 0;
+    int row = 0;
     while (fgets(line, sizeof line, stdin)) {
         if (line[0] == 'O' && line[1] == 'K') {
             workbench_num = workbenchs.size();
             return true;
         }
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < MAP_SIZE; i++) {
             if (line[i] == 'A') {
                 Robot r = Robot(robotId);
                 ++robotId;
@@ -989,6 +992,10 @@ bool readMap() {
                 workbenchs.push_back(wb);
             }
         }
+        for (int col = 0; col < MAP_SIZE; col++) {
+            map[row][col] = line[col];
+        }
+        ++row;
     }
     return false;
 }
@@ -1099,22 +1106,25 @@ int main() {
     puts("OK");
     fflush(stdout);
     int money;
-
+    
+    Graph graph;
+    graph.init(map);
+    
     // 图1
     if (workbench_num_7 == 8) {
-        map = 1;
+        cur_map = 1;
     }
     // 图2
     if (workbench_num_7 == 2 && workbench_num_8 == 2) {
-        map = 2;
+        cur_map = 2;
     }
     // 图3
     if (workbench_num_7 == 0) {
-        map = 3;
+        cur_map = 3;
     }
     // 图4
     if (workbench_num_7 == 1 && workbench_num_8 == 1) {
-        map = 4;
+        cur_map = 4;
     }
 
     // 读取每帧输入信息
@@ -1127,7 +1137,7 @@ int main() {
 
         action();
         //if (frame_id > 50) action();
-
+        
         printf("OK\n");
         fflush(stdout);
     }

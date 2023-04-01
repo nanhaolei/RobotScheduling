@@ -22,5 +22,6 @@ constexpr auto TOTAL_FRAME = 9000;
 constexpr int ROBOT_SIZE = 4;
 constexpr int GOODS_TYPE_SIZE = 7;
 constexpr int WORKBENCH_TYPE_SIZE = 9;
+constexpr int MAP_SIZE = 100;
 
 #endif

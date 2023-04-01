@@ -97,7 +97,7 @@ void Robot::calWaitFrame(const Workbench& workbench) {
 }
 
 // 计算速度
-void Robot::calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSpeed, int map) {
+void Robot::calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSpeed, int cur_map) {
 	// 计算在工作台范围内的等待时间 超出允许等待时间让出位置
 	int allow_frame = 80;
 	calWaitFrame(workbench);
@@ -125,7 +125,7 @@ void Robot::calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSp
 		lineSpeed = 1;
 	}*/
 
-	if (map == 0) {
+	if (cur_map == 0) {
 		if (abs(angleToTarget) > PI / 3) {
 			lineSpeed = 0;
 		}
@@ -140,13 +140,13 @@ void Robot::calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSp
 	}
 
 	// 图2特化
-	if (map == 2) {
+	if (cur_map == 2) {
 		if (abs(angleToTarget) > PI / 3) {
 			lineSpeed = 0;
 		}
 	}
 	// 图1特化
-	if (map == 1) {
+	if (cur_map == 1) {
 		if (abs(angleToTarget) > PI / 3) {
 			lineSpeed = 0;
 		}
@@ -155,7 +155,7 @@ void Robot::calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSp
 		}
 	}
 	// 图3特化
-	if (map == 3) {
+	if (cur_map == 3) {
 		if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
 			lineSpeed = 0;
 		}
@@ -164,7 +164,7 @@ void Robot::calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSp
 		}
 	}
 	// 图4特化
-	if (map == 4) {
+	if (cur_map == 4) {
 		if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
 			lineSpeed = 0;
 		}
@@ -176,10 +176,10 @@ void Robot::calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSp
 }
 
 // 移动
-void Robot::move(Workbench& workbench, int map) {
+void Robot::move(Workbench& workbench, int cur_map) {
 	int lineSpeed = 0;
 	double angleSpeed = 0;
-	calSpeed(workbench, lineSpeed, angleSpeed, map);
+	calSpeed(workbench, lineSpeed, angleSpeed, cur_map);
 	this->forward(lineSpeed);
 	this->rotate(angleSpeed);
 
@@ -219,9 +219,9 @@ void Robot::move(Workbench& workbench, int map) {
 }
 
 // 碰撞检测
-void Robot::checkCollision(vector<Robot> robots, int map) {
+void Robot::checkCollision(vector<Robot> robots, int cur_map) {
 	// 特殊情况下在墙边 不检测
-	if (map == 3) {
+	if (cur_map == 3) {
 		if (this->isBesideBoundary()) {
 			return;
 		}
@@ -323,14 +323,14 @@ void Robot::checkCollision(vector<Robot> robots, int map) {
 			}
 
 			// 同时去墙边
-			if (map == 1 || map == 2) {
+			if (cur_map == 1 || cur_map == 2) {
 				if (between_angle < PI / 3 && distance < RADUIS_FULL * 12 && robot.isBesideBoundary()) {
 					this->forward(3);
 					this->rotate(offset_angle / 2);
 				}
 			}
 			// 同时去一个工作台
-			if (map == 3) {
+			if (cur_map == 3) {
 				if (between_angle < PI / 3 && distance < RADUIS_FULL * 12 && robot.getTargetBenchId() == this->getTargetBenchId()) {
 					this->forward(3);
 					this->rotate(offset_angle / 2);

@@ -29,13 +29,13 @@ public:
 	void calWaitFrame(const Workbench& workbench);
 
 	// 计算速度
-	void calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSpeed, int map = 0);
+	void calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSpeed, int cur_map = 0);
 
 	// 移动
-	void move(Workbench& workbench, int map = 0);
+	void move(Workbench& workbench, int cur_map = 0);
 
 	// 碰撞检测
-	void checkCollision(vector<Robot> robots, int map = 0);
+	void checkCollision(vector<Robot> robots, int cur_map = 0);
 
 	// 令count循环
 	int getCount();
