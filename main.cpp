@@ -32,7 +32,7 @@ int workbench_num_7 = 0;
 int workbench_num_8 = 0;
 int workbench_num_9 = 0;
 int frame_id = 0;
-char map[MAP_SIZE][MAP_SIZE];
+char mapp[MAP_SIZE][MAP_SIZE];
 int cur_map = 0;
 
 // 目标冲突检测
@@ -993,7 +993,7 @@ bool readMap() {
             }
         }
         for (int col = 0; col < MAP_SIZE; col++) {
-            map[row][col] = line[col];
+            mapp[row][col] = line[col];
         }
         ++row;
     }
@@ -1108,7 +1108,7 @@ int main() {
     int money;
     
     Graph graph;
-    graph.init(map);
+    graph.init(mapp);
     
     // 图1
     if (workbench_num_7 == 8) {
