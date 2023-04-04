@@ -2,8 +2,10 @@
 #define ROBOT_H_
 
 #include "workbench.h"
+#include "geometry.h"
 #include <vector>
 using namespace std;
+
 
 class Robot {
 public:
@@ -43,6 +45,10 @@ public:
 	int getCount23();
 	int getCount13();
 
+	geometry::Vec2 getCoordinateVec() {
+		return array<double, 2>{coordinate[0], coordinate[1]};
+	}
+
 private:
 	int robotId;
 	int workbenchId;
@@ -61,7 +67,6 @@ private:
 
 public:
 	Robot(int _robotId);
-	~Robot() {};
 	inline void forward(double speed) {
 		printf("forward %d %f\n", this->robotId, speed);
 	}

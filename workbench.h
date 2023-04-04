@@ -35,7 +35,6 @@ private:
 	unordered_map <int, bool> holdMaterial;
 public:
 	Workbench(int _workbenchId, int _type);
-	~Workbench() {};
 	int getWorkbenchId() const { return workbenchId; }
 	void setWorkbenchId(int id) { workbenchId = id; }
 	int getType() const { return type; }

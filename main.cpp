@@ -8,7 +8,9 @@
 #include <cassert>
 #include "robot.h"
 #include "graph.h"
+#include "astar.h"
 using namespace std;
+using namespace geometry;
 
 vector<Workbench> workbenchs;
 vector<Robot> robots;
@@ -22,15 +24,15 @@ vector<Workbench*> workbenchs_7;
 vector<Workbench*> workbenchs_8;
 vector<Workbench*> workbenchs_9;
 int workbench_num = 0;
-int workbench_num_1 = 0;
-int workbench_num_2 = 0;
-int workbench_num_3 = 0;
-int workbench_num_4 = 0;
-int workbench_num_5 = 0;
-int workbench_num_6 = 0;
-int workbench_num_7 = 0;
-int workbench_num_8 = 0;
-int workbench_num_9 = 0;
+size_t workbench_num_1 = 0;
+size_t workbench_num_2 = 0;
+size_t workbench_num_3 = 0;
+size_t workbench_num_4 = 0;
+size_t workbench_num_5 = 0;
+size_t workbench_num_6 = 0;
+size_t workbench_num_7 = 0;
+size_t workbench_num_8 = 0;
+size_t workbench_num_9 = 0;
 int frame_id = 0;
 char mapp[MAP_SIZE][MAP_SIZE];
 int cur_map = 0;
@@ -338,7 +340,7 @@ int findSellBench(const int& robotId) {
     // 计算能收购该物品类型的工作台
     int goods_type = robots[robotId].getGoodsType();
     vector<Workbench*> workbenchs_n = findSellBenchs(goods_type);
-    int size = workbenchs_n.size();
+    size_t size = workbenchs_n.size();
 
     // 计算优先级最高的工作台
     int target_bench = workbenchs_n[0]->getWorkbenchId();
@@ -456,7 +458,7 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
 int findBuyBench(const int& robotId, const vector<Workbench*>& workbenchs_n) {
     int target_bench = -1;
     double min_time = INT_MAX;
-    int num = workbenchs_n.size();
+    size_t num = workbenchs_n.size();
     for (int i = 0; i < num; ++i) {
         int workbench_id = workbenchs_n[i]->getWorkbenchId();
         double time = calBuyPriority(robotId, workbench_id);
@@ -470,7 +472,7 @@ int findBuyBench(const int& robotId, const vector<Workbench*>& workbenchs_n) {
 int findBuyBench(const int& robotId, const vector<Workbench>& workbenchs_n) {
     int target_bench = -1;
     double min_time = INT_MAX;
-    int num = workbenchs_n.size();
+    size_t num = workbenchs_n.size();
     for (int i = 0; i < num; ++i) {
         int workbench_id = workbenchs_n[i].getWorkbenchId();
         double time = calBuyPriority(robotId, workbench_id);
@@ -551,7 +553,7 @@ int findFastestPath(const int& robotId, const vector<Workbench*>& workbenchs_n) 
 int findClosetBench(const int& robotId, const vector<Workbench*>& workbenchs_n) {
     int target_bench = -1;
     double min_distance = INT_MAX;
-    int num = workbenchs_n.size();
+    size_t num = workbenchs_n.size();
     for (int i = 0; i < num; ++i) {
         int workbench_id = workbenchs_n[i]->getWorkbenchId();
         double distance = robots[robotId].calDistance(workbenchs[workbench_id]);
@@ -986,7 +988,7 @@ bool readMap() {
                 ++robotId;
                 robots.push_back(r);
             }
-            else if (line[i] != '.') {
+            else if (line[i] != '.' && line[i] != '#') {
                 Workbench wb = Workbench(workbenchId, line[i] - '0');
                 ++workbenchId;
                 workbenchs.push_back(wb);
@@ -1107,9 +1109,18 @@ int main() {
     fflush(stdout);
     int money;
     
-    Graph graph;
-    graph.init(mapp);
+    Graph graph(mapp);
+
+    Node* start = graph.indexToNode({ 39, 24 });
+    Node* goal = graph.workbenchToNode(workbenchs_4[3]->getWorkbenchId());
     
+    AStar astar(start, goal);
+    vector<Node*> path = astar.searching();
+    for (auto node : path) {
+        node->print();
+    }
+
+    return 0;
     // 图1
     if (workbench_num_7 == 8) {
         cur_map = 1;

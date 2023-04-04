@@ -1,3 +1,6 @@
+#ifndef GEOMETRY_H_
+#define GEOMETRY_H_
+
 #include <array>
 namespace geometry {
 	using Vec2 = std::array<double, 2>;
@@ -9,4 +12,11 @@ namespace geometry {
 	inline double dot(const Vec2& a, const Vec2& b) { return a[0] * b[0] + a[1] * b[1]; }
 	inline double length2(const Vec2& a) { return dot(a, a); }
 	inline double length(const Vec2& a) { return sqrt(length2(a)); }
+	inline double distance(const Vec2& a, const Vec2& b) {
+		double dx = a[0] - b[0];
+		double dy = a[1] - b[1];
+		return sqrt(dx * dx  + dy * dy);
+	}
 }
+
+#endif

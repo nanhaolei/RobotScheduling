@@ -371,7 +371,7 @@ int Robot::getCount13() {
 	return count;
 }
 
-Robot::Robot(int _robotId) :robotId(_robotId) {
+Robot::Robot(int _robotId): robotId(_robotId) {
 	workbenchId = -1;
 	goodsType = 0;
 	timeCoefficient = 0;

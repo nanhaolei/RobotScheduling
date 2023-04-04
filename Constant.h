@@ -24,4 +24,6 @@ constexpr int GOODS_TYPE_SIZE = 7;
 constexpr int WORKBENCH_TYPE_SIZE = 9;
 constexpr int MAP_SIZE = 100;
 
+constexpr double EPSILON = 1e-7;
+
 #endif

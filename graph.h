@@ -7,29 +7,39 @@
 #include <unordered_map>
 #include <map>
 #include <unordered_set>
+#include <iostream>
 using namespace std;
 using namespace geometry;
 
 struct Node
 {
+	array<int, 2> map_index;
 	Vec2 coordinate;
 	bool is_obstacle;
 	bool is_workbench;
 	int workbench_id;
 	//vector<Node*> neighbors;
 	unordered_set<Node*> neighbors;
-	//array<int, 2> map_index;
+	
+	void print() {
+		cerr << map_index[0] << ',' << map_index[1] << endl;
+	}
 };
 
 class Graph
 {
 public:
-	void init(char map[MAP_SIZE][MAP_SIZE]);
+	vector<Node*> nodes;
+	Graph(char map[MAP_SIZE][MAP_SIZE]);
+	void initNodes(char map[MAP_SIZE][MAP_SIZE]);
 	void initNeighbors();
+	Node* workbenchToNode(int workbench_id);
+	Node* coordinateToNode(Vec2 coordinate);
+	Node* indexToNode(array<int, 2> index);
+	
 private:
-	vector<Node> nodes;
-	std::map<array<int, 2>, Node*> index_to_node;
-	std::map<Node*, array<int, 2>> node_to_index;
+	map<array<int, 2>, Node*> index_to_node;
 };
+
 
 #endif
