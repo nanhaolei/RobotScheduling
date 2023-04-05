@@ -35,10 +35,10 @@ public:
 	void calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSpeed, int cur_map = 0);
 
 	// 移动
-	void move(Workbench& workbench, int cur_map = 0);
+	void move_old(Workbench& workbench, int cur_map = 0);
 
 	// 碰撞检测
-	void checkCollision(vector<Robot> robots, int cur_map = 0);
+	void checkCollision(vector<Robot*> robots, int cur_map = 0);
 
 	// 令count循环
 	int getCount();
@@ -46,13 +46,21 @@ public:
 	int getCount23();
 	int getCount13();
 
-	double calAngleSpeed_new(const Vec2 target, double& angleToTarget);
-	void calSpeed_new(const Vec2 target, int& lineSpeed, double& angleSpeed);
+	// 计算角速度
+	double calAngleSpeed(const Vec2 target, double& angleToTarget);
+	// 计算线速度
+	void calSpeed(const Vec2 target, int& lineSpeed, double& angleSpeed);
+	// 计算角速度
 	double CalcNeedRotateAngle(const Vec2& point) const;
-	void CalcForwardSpeedAndRotateSpeed(const Vec2 target, int& lineSpeed, double& angleSpeed);
-	void move_new();
+	// 计算线速度
+	void CalcForwardSpeedAndRotateSpeed(const Vec2& target, int& lineSpeed, double& angleSpeed);
+	// 移动
+	void move();
+	// 判断是否已到达下一个节点
 	bool isReachNode();
+	// 记录不可达工作台
 	void addUnreachableBench(int workbench_id);
+	// 判断工作台是否可达
 	bool isReachable(int workbench_id);
 	
 private:
@@ -73,6 +81,7 @@ private:
 	vector<Vec2> path;
 	Vec2 coordinate;
 	unordered_set<int> unreachableBench;
+	Workbench* targetBench;
 
 public:
 	Robot(int _robotId);
@@ -120,6 +129,8 @@ public:
 	Vec2 getCoordinate() { return Vec2{ coordinate[0], coordinate[1] }; }
 	void setPath(vector<Vec2> path){ this->path = path; }
 	vector<Vec2> getPath() { return path; }
+	void setTargetBench(Workbench* workbench) { targetBench = workbench; }
+	Workbench* getTargetBench() { return targetBench; }
 };
 
 #endif

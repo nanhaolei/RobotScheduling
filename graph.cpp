@@ -52,23 +52,50 @@ void Graph::initNeighbors() {
 
 		if (index_to_node.find({ cur_index[0], cur_index[1] - 1 }) != index_to_node.end()){
 			Node* left = index_to_node[{cur_index[0], cur_index[1] - 1}];
-			if(!left->is_obstacle)
+			/*if(!left->is_obstacle)*/
 				cur_node->neighbors.insert(left);
 		}
+
 		if (index_to_node.find({ cur_index[0], cur_index[1] + 1 }) != index_to_node.end()) {
 			Node* right = index_to_node[{cur_index[0], cur_index[1] + 1}];
-			if (!right->is_obstacle)
+			/*if (!right->is_obstacle)*/
 				cur_node->neighbors.insert(right);
 		}
+
 		if (index_to_node.find({ cur_index[0] - 1, cur_index[1] }) != index_to_node.end()) {
 			Node* top = index_to_node[{cur_index[0] - 1, cur_index[1]}];
-			if (!top->is_obstacle)
+			/*if (!top->is_obstacle)*/
 				cur_node->neighbors.insert(top);
 		}
+
 		if (index_to_node.find({ cur_index[0] + 1, cur_index[1] }) != index_to_node.end()) {
 			Node* bottom = index_to_node[{cur_index[0] + 1, cur_index[1]}];
-			if (!bottom->is_obstacle)
+			/*if (!bottom->is_obstacle)*/
 				cur_node->neighbors.insert(bottom);
+		}
+
+		if (index_to_node.find({ cur_index[0] - 1, cur_index[1] - 1 }) != index_to_node.end()) {
+			Node* neighbor = index_to_node[{cur_index[0] - 1, cur_index[1] - 1}];
+			/*if (!neighbor->is_obstacle)*/
+				cur_node->neighbors.insert(neighbor);
+		}
+
+		if (index_to_node.find({ cur_index[0] - 1, cur_index[1] + 1 }) != index_to_node.end()) {
+			Node* neighbor = index_to_node[{cur_index[0] - 1, cur_index[1] + 1}];
+			/*if (!neighbor->is_obstacle)*/
+				cur_node->neighbors.insert(neighbor);
+		}
+
+		if (index_to_node.find({ cur_index[0] + 1, cur_index[1] - 1 }) != index_to_node.end()) {
+			Node* neighbor = index_to_node[{cur_index[0] + 1, cur_index[1] - 1}];
+			/*if (!neighbor->is_obstacle)*/
+				cur_node->neighbors.insert(neighbor);
+		}
+
+		if (index_to_node.find({ cur_index[0] + 1, cur_index[1] + 1 }) != index_to_node.end()) {
+			Node* neighbor = index_to_node[{cur_index[0] + 1, cur_index[1] + 1}];
+			/*if (!neighbor->is_obstacle)*/
+				cur_node->neighbors.insert(neighbor);
 		}
 		
 	}

@@ -16,6 +16,7 @@ vector<Node*> AStar::searching() {
 			//break;
 		}
 		for (auto neighbor : cur_node->neighbors) {
+			if (neighbor->is_obstacle) continue;
 			double new_cost = g[cur_node] + cost(cur_node, neighbor);
 			/*if (g.find(neighbor) == g.end()) {
 				g[neighbor] = INT_MAX;
@@ -58,14 +59,27 @@ vector<Node*> AStar::extractPath() {
 //	return path;
 //}
 
-double AStar::cost(Node* a, Node* b) {
-	return distance(a->coordinate, b->coordinate);
+double AStar::cost(Node* cur_node, Node* neigh_node) {
+	if (isBesideObstacle(neigh_node)) {
+		return INT_MAX / 2;
+	}
+	return 1.0;
+	//return distance(cur_node->coordinate, neigh_node->coordinate);
 }
 
 double AStar::heuristic(Node* cur_node) {
+	// 曼哈顿距离 四方向移动
 	/*double dx = abs(goal->coordinate[0] - cur_node->coordinate[0]);
 	double dy = abs(goal->coordinate[1] - cur_node->coordinate[1]);
 	return dx + dy;*/
+
+	// 对角距离 八方向移动
+	/*double dx = abs(goal->coordinate[0] - cur_node->coordinate[0]);
+	double dy = abs(goal->coordinate[1] - cur_node->coordinate[1]);
+	double D = 1, D2 = 1;
+	return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)*/
+
+	// 欧几里得距离 任意方向移动
 	return distance(cur_node->coordinate, goal->coordinate);
 }
 
@@ -73,4 +87,12 @@ double AStar::f(Node* cur_node) {
 	return g[cur_node] + heuristic(cur_node);
 }
 
+bool AStar::isBesideObstacle(Node* node) {
+	for (auto neighbor : node->neighbors) {
+		if (neighbor->is_obstacle) {
+			return true;
+		}
+	}
+	return false;
+}
 

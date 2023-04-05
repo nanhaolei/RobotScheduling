@@ -22,12 +22,13 @@ private:
 	priority_queue <Node*, vector<Node*>, f_compare> open;
 	
 public:
-	double cost(Node* a, Node* b);
+	AStar(Node* start_, Node* goal_) : start(start_), goal(goal_) {};
+	double cost(Node* cur_node, Node* neigh_node);
 	double heuristic(Node* cur_node);
 	double f(Node* cur_node);
 	vector<Node*> searching();
 	vector<Node*> extractPath();
-	AStar(Node* start_, Node* goal_) : start(start_), goal(goal_) {};
+	bool isBesideObstacle(Node* node);
 };
 
 #endif
