@@ -31,11 +31,13 @@ class Graph
 public:
 	vector<Node*> nodes;
 	Graph(char map[MAP_SIZE][MAP_SIZE]);
+	Graph() {};
 	void initNodes(char map[MAP_SIZE][MAP_SIZE]);
 	void initNeighbors();
 	Node* workbenchToNode(int workbench_id);
 	Node* coordinateToNode(Vec2 coordinate);
 	Node* indexToNode(array<int, 2> index);
+	void init(char map[MAP_SIZE][MAP_SIZE]);
 	
 private:
 	map<array<int, 2>, Node*> index_to_node;

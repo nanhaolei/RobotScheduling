@@ -2,6 +2,7 @@
 #define GEOMETRY_H_
 
 #include <array>
+#include "constant.h"
 namespace geometry {
 	using Vec2 = std::array<double, 2>;
 	/* vec2 math */
@@ -16,6 +17,12 @@ namespace geometry {
 		double dx = a[0] - b[0];
 		double dy = a[1] - b[1];
 		return sqrt(dx * dx  + dy * dy);
+	}
+	inline bool isEq(const Vec2& a, const Vec2& b) {
+		if (abs(a[0] - b[0]) < EPSILON && abs(a[1] - b[1]) < EPSILON)
+			return true;
+		else
+			return false;
 	}
 }
 

@@ -6,6 +6,11 @@ Graph::Graph(char map[MAP_SIZE][MAP_SIZE]) {
 	initNeighbors();
 }
 
+void Graph::init(char map[MAP_SIZE][MAP_SIZE]) {
+	initNodes(map);
+	initNeighbors();
+}
+
 void Graph::initNodes(char map[MAP_SIZE][MAP_SIZE]) {
 	int workbench_id = 0;
 	// 从左上角开始
@@ -81,7 +86,7 @@ Node* Graph::workbenchToNode(int workbench_id) {
 
 Node* Graph::coordinateToNode(Vec2 coordinate) {
 	for (auto node : nodes) {
-		if (abs(node->coordinate[0] - coordinate[0]) < EPSILON && abs(node->coordinate[1] - coordinate[1]) < EPSILON) {
+		if (abs(node->coordinate[0] - coordinate[0]) < JUDGE_DISTANCE && abs(node->coordinate[1] - coordinate[1]) < JUDGE_DISTANCE) {
 			return node;
 		}
 	}

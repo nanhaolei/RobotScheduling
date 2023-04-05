@@ -6,7 +6,9 @@
 #include <unordered_map>
 #include <random>
 #include "constant.h"
+#include "geometry.h"
 using namespace std;
+using namespace geometry;
 
 class Workbench {
 public:
@@ -27,7 +29,7 @@ public:
 private:
 	int workbenchId;
 	int type;
-	double coordinate[2];
+	Vec2 coordinate;
 	int restFrame;
 	int materialStatus;
 	int productStatus;
@@ -56,7 +58,7 @@ public:
 		materialStatus = ms;
 		convertMaterialStatus(ms);
 	};
-	
+	Vec2 getCoordinate() { return Vec2{ coordinate[0], coordinate[1] }; }
 	void print() const {
 		std::cerr << "workbenchId: " << workbenchId << std::endl;
 		std::cerr << "type: " << type << std::endl;

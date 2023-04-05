@@ -34,8 +34,9 @@ size_t workbench_num_7 = 0;
 size_t workbench_num_8 = 0;
 size_t workbench_num_9 = 0;
 int frame_id = 0;
-char mapp[MAP_SIZE][MAP_SIZE];
+char map_data[MAP_SIZE][MAP_SIZE];
 int cur_map = 0;
+Graph* graph = new Graph();
 
 // 目标冲突检测
 bool checkConflict(const int& robotId, const int& target_bench) {
@@ -895,6 +896,7 @@ bool compareTime(const int& robotId, const int& buy_bench_id) {
     }
 }
 
+
 void action() {
     for (int robotId = 0; robotId < ROBOT_SIZE; robotId++) {
         int target_bench = robots[robotId].getTargetBenchId();
@@ -961,14 +963,32 @@ void action() {
                     target_bench = findSellBench(robotId);
                 }
             }
+            
+            Vec2 start_coor = robots[robotId].getCoordinate();
+            Node* start = graph->coordinateToNode(start_coor);
+            Node* goal = graph->workbenchToNode(target_bench);
+            AStar astar(start, goal);
+            vector<Node*> path = astar.searching();
+            if (path.size() == 0) {
+                
+            }
+            
+            vector<Vec2> path_coor;
+            for (auto node : path) {
+                path_coor.emplace_back(node->coordinate);
+            }
+            robots[robotId].setPath(path_coor);
+            robots[robotId].setTargetBenchId(target_bench);
         }
         if (target_bench == -1) {
             continue;
         }
 
-        robots[robotId].setTargetBenchId(target_bench);
+        //cerr << "test1" << endl;
+        robots[robotId].move_new();
+        /*robots[robotId].setTargetBenchId(target_bench);
         robots[robotId].move(workbenchs[target_bench], cur_map);
-        robots[robotId].checkCollision(robots, cur_map);
+        robots[robotId].checkCollision(robots, cur_map);*/
     }
 }
 
@@ -980,6 +1000,7 @@ bool readMap() {
     while (fgets(line, sizeof line, stdin)) {
         if (line[0] == 'O' && line[1] == 'K') {
             workbench_num = workbenchs.size();
+            graph->init(map_data);
             return true;
         }
         for (int i = 0; i < MAP_SIZE; i++) {
@@ -995,10 +1016,11 @@ bool readMap() {
             }
         }
         for (int col = 0; col < MAP_SIZE; col++) {
-            mapp[row][col] = line[col];
+            map_data[row][col] = line[col];
         }
         ++row;
     }
+    
     return false;
 }
 
@@ -1101,26 +1123,7 @@ bool readFrame() {
     return false;
 }
 
-int main() {
-    // 初始化数据
-    readMap();
-    classify();
-    puts("OK");
-    fflush(stdout);
-    int money;
-    
-    Graph graph(mapp);
-
-    Node* start = graph.indexToNode({ 39, 24 });
-    Node* goal = graph.workbenchToNode(workbenchs_4[3]->getWorkbenchId());
-    
-    AStar astar(start, goal);
-    vector<Node*> path = astar.searching();
-    for (auto node : path) {
-        node->print();
-    }
-
-    return 0;
+void judgeMap() {
     // 图1
     if (workbench_num_7 == 8) {
         cur_map = 1;
@@ -1137,6 +1140,34 @@ int main() {
     if (workbench_num_7 == 1 && workbench_num_8 == 1) {
         cur_map = 4;
     }
+}
+
+void test() {
+    if(robots[0].getTargetBenchId()==-1)
+    {
+        Vec2 start_coor = robots[0].getCoordinate();
+        Node* start = graph->coordinateToNode(start_coor);
+        Node* goal = graph->workbenchToNode(workbenchs_4[3]->getWorkbenchId());
+        AStar astar(start, goal);
+        vector<Node*> path = astar.searching();
+        vector<Vec2> path_coor;
+        for (auto node : path) {
+            path_coor.emplace_back(node->coordinate);
+        }
+        robots[0].setPath(path_coor);
+        robots[0].setTargetBenchId(workbenchs_4[3]->getWorkbenchId());
+    }
+    
+    robots[0].move_new();
+}
+
+int main() {
+    // 初始化数据
+    readMap();
+    classify();
+    puts("OK");
+    fflush(stdout);
+    int money;
 
     // 读取每帧输入信息
     while (scanf("%d %d", &frame_id, &money) != EOF) {
@@ -1147,8 +1178,8 @@ int main() {
         printf("%d\n", frame_id);
 
         action();
-        //if (frame_id > 50) action();
-        
+        //test();
+        //return 0;
         printf("OK\n");
         fflush(stdout);
     }

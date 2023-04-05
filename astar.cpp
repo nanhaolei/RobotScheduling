@@ -12,7 +12,8 @@ vector<Node*> AStar::searching() {
 		Node* cur_node = open.top();
 		open.pop();
 		if (cur_node == goal) {
-			break;
+			return extractPath();
+			//break;
 		}
 		for (auto neighbor : cur_node->neighbors) {
 			double new_cost = g[cur_node] + cost(cur_node, neighbor);
@@ -27,7 +28,8 @@ vector<Node*> AStar::searching() {
 			}
 		}
 	}
-	return extractPath();
+	// 目标不可达
+	return {};
 }
 
 vector<Node*> AStar::extractPath() {

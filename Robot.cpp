@@ -340,6 +340,109 @@ void Robot::checkCollision(vector<Robot> robots, int cur_map) {
 	}
 }
 
+
+
+double Robot::calAngleSpeed_new(const Vec2 target, double& angleToTarget) {
+	double r_coor_x = this->getCoordinateX();
+	double r_coor_y = this->getCoordinateY();
+	double w_coor_x = target[0];
+	double w_coor_y = target[1];
+	angleToTarget = adjustDirection(w_coor_x, w_coor_y, r_coor_x, r_coor_y, this->getDirection());
+	double angleSpeed = angleToTarget / DELTATIME / 6;
+	return angleSpeed;
+}
+
+void Robot::calSpeed_new(const Vec2 target, int& lineSpeed, double& angleSpeed) {
+	double angleToTarget;
+	angleSpeed = calAngleSpeed_new(target, angleToTarget);
+	lineSpeed = MAX_FORWARD_SPEED;
+	if (abs(angleToTarget) > 0.08) {
+		lineSpeed = 0;
+	}
+}
+
+double Robot::CalcNeedRotateAngle(const Vec2& point) const
+{
+	if (isEq(coordinate, point)) {
+		return 0.0;
+	}
+	const double angle = atan2(point[1] - coordinate[1], point[0] - coordinate[0]);
+	const double rotation = angle - direction;
+	// 如果要旋转的弧度值大于π或小于-π，取补角
+	if (rotation > PI) {
+		return rotation - 2 * PI;
+	}
+	if (rotation < -PI) {
+		return rotation + 2 * PI;
+	}
+	return rotation;
+}
+
+void Robot::CalcForwardSpeedAndRotateSpeed(const Vec2 target, int& lineSpeed, double& angleSpeed)
+{
+	auto angle = CalcNeedRotateAngle(target);
+	auto absAngle = abs(angle);
+	const double maxRotateSpeed = (angle > 0 ? MAX_ROTATE_SPEED : -MAX_ROTATE_SPEED);
+	const double maxSpeed = MAX_FORWARD_SPEED;
+	if (absAngle < MIN_ANGLE) { // 如果朝向和目标点的夹角很小，直接全速前进
+		lineSpeed = MAX_FORWARD_SPEED;
+		angleSpeed = 0.;
+	}
+	else {
+		if (absAngle > PI / 2) {
+			// 角度太大，全速扭转
+			// 速度控制小一点，避免靠近不了工作台
+			lineSpeed = MAX_FORWARD_SPEED * 0.2;
+			angleSpeed = maxRotateSpeed;
+		}
+		else {
+			lineSpeed = MAX_FORWARD_SPEED * cos(absAngle); // 前进速度随角度变小而变大
+			angleSpeed = maxRotateSpeed * sin(absAngle);    // 旋转速度随角度变小而变小
+		}
+	}
+}
+
+void Robot::move_new() {
+	if (isReachNode() && path.size() > 1) {
+		path.erase(path.begin());
+	}
+	int lineSpeed = 0;
+	double angleSpeed = 0;
+	//calSpeed_new(path[0], lineSpeed, angleSpeed);
+	CalcForwardSpeedAndRotateSpeed(path[0], lineSpeed, angleSpeed);
+	this->forward(lineSpeed);
+	this->rotate(angleSpeed);
+
+	// 已到达目标工作台
+	if (this->workbenchId == this->targetBenchId) {
+		// 买
+		if (this->goodsType == 0) {
+			this->buy();
+			this->targetBenchId = -1;
+		}
+		// 卖
+		else {
+			this->sell();
+			this->targetBenchId = -1;
+			this->sellBenchId = -1;
+		}
+		this->path.clear();
+	}
+}
+
+bool Robot::isReachNode()
+{
+	double distance_eps = 0.4;
+	if (abs(coordinate[0] - path[0][0]) < distance_eps && abs(coordinate[1] - path[0][1]) < distance_eps)
+		return true;
+	else 
+		return false;
+}
+
+void Robot::setPath(vector<Vec2> path) {
+	this->path = path;
+}
+
 // 令count循环
 int Robot::getCount() {
 	if (this->count == 4) {
