@@ -896,7 +896,6 @@ bool compareTime(const int& robotId, const int& buy_bench_id) {
     }
 }
 
-
 void action() {
     for (int robotId = 0; robotId < ROBOT_SIZE; robotId++) {
         int target_bench = robots[robotId].getTargetBenchId();
@@ -963,16 +962,71 @@ void action() {
                     target_bench = findSellBench(robotId);
                 }
             }
-            
+        }
+        if (target_bench == -1) {
+            continue;
+        }
+        robots[robotId].setTargetBenchId(target_bench);
+        robots[robotId].move(workbenchs[target_bench], cur_map);
+        robots[robotId].checkCollision(robots, cur_map);
+    }
+}
+
+void action_new() {
+    for (int robotId = 0; robotId < ROBOT_SIZE; robotId++) {
+        int target_bench = robots[robotId].getTargetBenchId();
+        if (target_bench == -1) {
+            // 买入
+            if (robots[robotId].getGoodsType() == 0) {
+                //int sell_bench, goods_type;
+                //int bench_id;
+
+                // 若当前所在工作台产品格有产品 
+                /*else if (curbenchId != -1 && workbenchs[curbenchId].getProductStatus() == 1) {
+                    target_bench = curbenchId;
+                }*/
+                // 若7号工作台没有目标是它 且只缺一个材料 去买这个材料
+                /*else if (judge_2(sell_bench, goods_type)) {
+                    target_bench = findMaterial(robotId, goods_type, sell_bench);
+                }*/
+                // 若位于456工作台上 且该工作台缺一个材料 找这个材料带回来
+                /*else if (( goods_type = judge_1(robotId) ) > 0) {
+                    robots[robotId].setSellBenchId(workbenchs[curbenchId]);
+                    target_bench = findMaterial(robotId, goods_type);
+                }*/
+
+                target_bench = unitProfitFirst(robotId);
+                
+                // 剩余时间不足以买4567并卖掉
+                if (compareTime(robotId, target_bench)) {
+                    target_bench = unitProfitFirst(robotId, true);
+                    if (compareTime(robotId, target_bench)) {
+                        target_bench = -1;
+                    }
+                }
+            }
+            // 卖出
+            else {
+                // 回到买入时指定的工作台
+                if (robots[robotId].getSellBenchId() != -1) {
+                    target_bench = robots[robotId].getSellBenchId();
+                }
+                // 没有指定
+                else {
+                    target_bench = findSellBench(robotId);
+                }
+            }
+
+            // 计算路径
             Vec2 start_coor = robots[robotId].getCoordinate();
             Node* start = graph->coordinateToNode(start_coor);
             Node* goal = graph->workbenchToNode(target_bench);
             AStar astar(start, goal);
             vector<Node*> path = astar.searching();
             if (path.size() == 0) {
-                
+
             }
-            
+
             vector<Vec2> path_coor;
             for (auto node : path) {
                 path_coor.emplace_back(node->coordinate);
@@ -983,15 +1037,9 @@ void action() {
         if (target_bench == -1) {
             continue;
         }
-
-        //cerr << "test1" << endl;
         robots[robotId].move_new();
-        /*robots[robotId].setTargetBenchId(target_bench);
-        robots[robotId].move(workbenchs[target_bench], cur_map);
-        robots[robotId].checkCollision(robots, cur_map);*/
     }
 }
-
 bool readMap() {
     char line[1024];
     int workbenchId = 0;
