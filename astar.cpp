@@ -46,7 +46,7 @@ vector<Node*> AStar::extractPath() {
 }
 
 void AStar::smoothPath(vector<Node*>& path) {
-	int maxIter = 200;
+	int maxIter = 100;
 	int iter = 0;
 	bool changed = true;
 	while (changed && iter < maxIter) {
@@ -72,8 +72,8 @@ double AStar::cost(Node* cur_node, Node* neigh_node) {
 	if (isBesideObstacle(neigh_node) == 1) {
 		return 1000;
 	}
-	//return 1.0;
-	return distance(cur_node->coordinate, neigh_node->coordinate);
+	return 1.0;
+	//return distance(cur_node->coordinate, neigh_node->coordinate);
 }
 
 double AStar::heuristic(Node* cur_node) {
@@ -109,9 +109,36 @@ int AStar::isBesideObstacle(Node* node) {
 			return 2;
 		}
 		// 节点斜向有障碍
+		//else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
+		//	return 1;
+		//}
+		//for (auto nei : neighbors) {
+		//	for (auto nei_nei : nei->neighbors) {
+		//		// 节点上下左右有障碍
+		//		if (neighbors[0]->is_obstacle || neighbors[1]->is_obstacle || neighbors[2]->is_obstacle || neighbors[3]->is_obstacle) {
+		//			return 2;
+		//		}
+		//		// 节点斜向有障碍
+		//		else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
+		//			return 1;
+		//		}
+		//	}
+		//}
 		else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
-			return 1;
+			for (auto nei : neighbors) {
+				for (auto nei_nei : nei->neighbors) {
+					// 节点上下左右有障碍
+					if (neighbors[0]->is_obstacle || neighbors[1]->is_obstacle || neighbors[2]->is_obstacle || neighbors[3]->is_obstacle) {
+						return 2;
+					}
+					// 节点斜向有障碍
+					else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
+						return 1;
+					}
+				}
+			}
 		}
+		
 	}
 	
 	return 0;

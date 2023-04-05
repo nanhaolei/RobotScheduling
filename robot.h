@@ -62,6 +62,8 @@ public:
 	void addUnreachableBench(int workbench_id);
 	// 判断工作台是否可达
 	bool isReachable(int workbench_id);
+	// 碰撞检测
+	void checkCollision(vector<Robot*> robots);
 	
 private:
 	int robotId;

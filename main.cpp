@@ -1161,6 +1161,7 @@ void action() {
             robot->setTargetBench(workbenchs[target_bench]);
         }
         robot->move();
+        robot->checkCollision(robots);
     }
 }
 
