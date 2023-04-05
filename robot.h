@@ -38,7 +38,7 @@ public:
 	void move_old(Workbench& workbench, int cur_map = 0);
 
 	// Åö×²¼ì²â
-	void checkCollision(vector<Robot*> robots, int cur_map = 0);
+	void checkCollision_old(vector<Robot*> robots, int cur_map = 0);
 
 	// ÁîcountÑ­»·
 	int getCount();

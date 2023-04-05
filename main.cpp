@@ -376,24 +376,24 @@ double calSellPriority(const int& robotId, const double& distance, const int& wo
 
     // 7工作台
     if (bench_type == 7) {
+        double coefficient = 1.0;
         // 材料格空余
         if (material_status)
         {
             // 只缺一个 
             if (full_count == 2) {
-                actual_time = move_time;
-                return move_time / 6;
+                coefficient *= 6;
             }
             // 缺两个 
             if (full_count == 1) {
-                actual_time = move_time;
-                return move_time / 3;
+                coefficient *= 3;
             }
             // 缺三个
             if (full_count == 0) {
-                actual_time = move_time;
-                return move_time;
+                coefficient *= 1;
             }
+            actual_time = move_time;
+            return move_time;
         }
         // 正在生产 且 所有材料格都不空余 且 产品格没物品 
         else if (rest_time > 0 && full_count == 3 && workbenchs[workbenchId]->getProductStatus() == 0) {
@@ -406,28 +406,30 @@ double calSellPriority(const int& robotId, const double& distance, const int& wo
     // 456工作台
     else if ((bench_type == 4 || bench_type == 5 || bench_type == 6)) {
         double coefficient = 1.0;
-        // 材料格空余 且 7没有该材料
-        if (material_status) {
-            for (auto bench : workbenchs_7) {
-                if (bench->getRestFrame() < 0 && !bench->getReservedMaterial(bench_type))
-                {
-                    coefficient *= 8;
-                }
+        // 7没有该材料
+        for (auto bench : workbenchs_7) {
+            if (bench->getRestFrame() < 0 && !bench->getReservedMaterial(bench_type))
+            {
+                coefficient *= 8;
             }
         }
         // 材料格空余 且 只缺一个
         if (material_status && full_count == 1) {
             // 有7
             if (workbenchs_7.size() > 0) {
-                coefficient *= 4;
+                coefficient *= 3;
             }
             // 无7
             else {
-                coefficient *= 1.2;
+                coefficient *= 3;
             }
         }
+        // 产品格有产品
+        if (workbenchs[workbenchId]->getProductStatus() == 1) {
+            coefficient *= 2;
+        }
 
-        // 缺两个
+        // 材料格空余
         if (material_status) {
             actual_time = move_time;
             return move_time / coefficient;
@@ -584,10 +586,9 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
     double move_time = distance / speed * offset;
     double rest_time = workbenchs[workbenchId]->getRestFrame() / static_cast<double>(FPS);
 
-    int threshold = 8000;
-    if (cur_map == 3) threshold = 8500;
+
     // 当不位于4567工作台上时 降低购买优先级
-    if ((bench_type == 4 || bench_type == 5 || bench_type == 6 || bench_type == 7) && frame_id < threshold) {
+    if ((bench_type == 4 || bench_type == 5 || bench_type == 6 || bench_type == 7) && frame_id < TOTAL_FRAME - 2000) {
         // 位于工作台上
         if (robots[robotId]->getWorkbenchId() == workbenchId)
         {
@@ -612,10 +613,10 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
             }
             else {
                 if (workbenchs[workbenchId]->getProductStatus() == 1) {
-                    return move_time * 4;
+                    return move_time * 10;
                 }
                 else if (rest_time > 0) {
-                    return calAllowWaitTime(rest_time, move_time, bench_type) * 4;
+                    return calAllowWaitTime(rest_time, move_time, bench_type) * 10;
                 }
                 else {
                     return INT_MAX;
@@ -1113,7 +1114,7 @@ void action_old() {
         }
         robots[robotId]->setTargetBenchId(target_bench);
         robots[robotId]->move_old(*workbenchs[target_bench], cur_map);
-        robots[robotId]->checkCollision(robots, cur_map);
+        robots[robotId]->checkCollision_old(robots, cur_map);
     }
 }
 void action() {
@@ -1153,10 +1154,8 @@ void action() {
             Node* goal = graph->workbenchToNode(target_bench);
             AStar astar(start, goal);
             vector<Node*> path = astar.searching();
-            vector<Vec2> path_coor;
-            for (auto node : path) {
-                path_coor.emplace_back(node->coordinate);
-            }
+            astar.smoothPath(path);
+            vector<Vec2> path_coor = astar.getCoorPath(path);
             robot->setPath(path_coor);
             robot->setTargetBenchId(target_bench);
             robot->setTargetBench(workbenchs[target_bench]);

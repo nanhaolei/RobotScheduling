@@ -208,7 +208,7 @@ void Robot::move_old(Workbench& workbench, int cur_map) {
 }
 
 // 碰撞检测
-void Robot::checkCollision(vector<Robot*> robots, int cur_map) {
+void Robot::checkCollision_old(vector<Robot*> robots, int cur_map) {
 	// 特殊情况下在墙边 不检测
 	if (cur_map == 3) {
 		if (this->isBesideBoundary()) {
@@ -375,7 +375,7 @@ void Robot::CalcForwardSpeedAndRotateSpeed(const Vec2& target, int& lineSpeed, d
 		angleSpeed = 0.;
 	}
 	else {
-		if (absAngle > PI / 3) {
+		if (absAngle > PI / 2) {
 			// 角度太大，全速扭转
 			// 速度控制小一点，避免靠近不了工作台
 			lineSpeed = MAX_FORWARD_SPEED * 0.2;
@@ -410,7 +410,6 @@ void Robot::move() {
 
 	// 已到达目标工作台
 	if (this->workbenchId == this->targetBenchId) {
-		//targetBench->print();
 		// 买
 		if (this->goodsType == 0) {
 			// 产品还没生产好则等待
@@ -439,7 +438,7 @@ void Robot::move() {
 
 bool Robot::isReachNode()
 {
-	double distance_eps = 0.3;
+	double distance_eps = 0.4;
 	if (abs(coordinate[0] - path[0][0]) < distance_eps && abs(coordinate[1] - path[0][1]) < distance_eps)
 		return true;
 	else 

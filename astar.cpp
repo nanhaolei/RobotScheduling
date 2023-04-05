@@ -44,27 +44,36 @@ vector<Node*> AStar::extractPath() {
 	reverse(path.begin(), path.end());
 	return path;
 }
-//vector<Node*> AStar::extractPath() {
-//	vector<Node*> path;
-//	path.emplace_back(goal);
-//	Node* cur_node = goal;
-//	while (true) {
-//		cur_node = parent[cur_node];
-//		path.emplace_back(cur_node);
-//		if (cur_node == start) {
-//			break;
-//		}
-//	}
-//	reverse(path.begin(), path.end());
-//	return path;
-//}
+
+void AStar::smoothPath(vector<Node*>& path) {
+	int maxIter = 200;
+	int iter = 0;
+	bool changed = true;
+	while (changed && iter < maxIter) {
+		changed = false;
+		for (int i = 1; i < path.size() - 1; i++) {
+			Node* prev = path[i - 1];
+			Node* cur = path[i];
+			Node* next = path[i + 1];
+			if (!prev->is_obstacle && !next->is_obstacle && cost(prev, next) <= cost(prev, cur) + cost(cur, next)) {
+				path.erase(path.begin() + i);
+				path.insert(path.begin() + i, parent[next]);
+				changed = true;
+			}
+		}
+		iter++;
+	}
+}
 
 double AStar::cost(Node* cur_node, Node* neigh_node) {
-	if (isBesideObstacle(neigh_node)) {
-		return INT_MAX / 2;
+	if (isBesideObstacle(neigh_node) == 2) {
+		return INT_MAX;
 	}
-	return 1.0;
-	//return distance(cur_node->coordinate, neigh_node->coordinate);
+	if (isBesideObstacle(neigh_node) == 1) {
+		return 1000;
+	}
+	//return 1.0;
+	return distance(cur_node->coordinate, neigh_node->coordinate);
 }
 
 double AStar::heuristic(Node* cur_node) {
@@ -87,12 +96,33 @@ double AStar::f(Node* cur_node) {
 	return g[cur_node] + heuristic(cur_node);
 }
 
-bool AStar::isBesideObstacle(Node* node) {
-	for (auto neighbor : node->neighbors) {
-		if (neighbor->is_obstacle) {
-			return true;
+int AStar::isBesideObstacle(Node* node) {
+	auto neighbors = node->neighbors;
+	// 节点在角落里
+	if (neighbors.size() == 3) {
+		return 2;
+	}
+	
+	if (neighbors.size() == 8) {
+		// 节点上下左右有障碍
+		if (neighbors[0]->is_obstacle || neighbors[1]->is_obstacle || neighbors[2]->is_obstacle || neighbors[3]->is_obstacle) {
+			return 2;
+		}
+		// 节点斜向有障碍
+		else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
+			return 1;
 		}
 	}
-	return false;
+	
+	return 0;
+}
+
+vector<Vec2> AStar::getCoorPath(const vector<Node*>& path)
+{
+	vector<Vec2> path_coor;
+	for (auto node : path) {
+		path_coor.emplace_back(node->coordinate);
+	}
+	return path_coor;
 }
 

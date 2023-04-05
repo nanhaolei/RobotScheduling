@@ -52,50 +52,66 @@ void Graph::initNeighbors() {
 
 		if (index_to_node.find({ cur_index[0], cur_index[1] - 1 }) != index_to_node.end()){
 			Node* left = index_to_node[{cur_index[0], cur_index[1] - 1}];
-			/*if(!left->is_obstacle)*/
-				cur_node->neighbors.insert(left);
+			//cur_node->neighbors.insert(left);
+			//cur_node->neighbors["left"] = left;
+			//cur_node->neighbors[0] = left;
+			cur_node->neighbors.emplace_back(left);
 		}
 
 		if (index_to_node.find({ cur_index[0], cur_index[1] + 1 }) != index_to_node.end()) {
 			Node* right = index_to_node[{cur_index[0], cur_index[1] + 1}];
-			/*if (!right->is_obstacle)*/
-				cur_node->neighbors.insert(right);
+			//cur_node->neighbors.insert(right);
+			//cur_node->neighbors["right"] = right;
+			//cur_node->neighbors[2] = right;
+			cur_node->neighbors.emplace_back(right);
 		}
 
 		if (index_to_node.find({ cur_index[0] - 1, cur_index[1] }) != index_to_node.end()) {
 			Node* top = index_to_node[{cur_index[0] - 1, cur_index[1]}];
-			/*if (!top->is_obstacle)*/
-				cur_node->neighbors.insert(top);
+			//cur_node->neighbors.insert(top);
+			//cur_node->neighbors["top"] = top;
+			//cur_node->neighbors[1] = top;
+			cur_node->neighbors.emplace_back(top);
 		}
 
 		if (index_to_node.find({ cur_index[0] + 1, cur_index[1] }) != index_to_node.end()) {
 			Node* bottom = index_to_node[{cur_index[0] + 1, cur_index[1]}];
-			/*if (!bottom->is_obstacle)*/
-				cur_node->neighbors.insert(bottom);
+			//cur_node->neighbors.insert(bottom);
+			//cur_node->neighbors["bottom"] = bottom;
+			//cur_node->neighbors[3] = bottom;
+			cur_node->neighbors.emplace_back(bottom);
 		}
 
 		if (index_to_node.find({ cur_index[0] - 1, cur_index[1] - 1 }) != index_to_node.end()) {
 			Node* neighbor = index_to_node[{cur_index[0] - 1, cur_index[1] - 1}];
-			/*if (!neighbor->is_obstacle)*/
-				cur_node->neighbors.insert(neighbor);
+			//cur_node->neighbors.insert(neighbor);
+			//cur_node->neighbors["left_top"] = neighbor;
+			//cur_node->neighbors[7] = neighbor;
+			cur_node->neighbors.emplace_back(neighbor);
 		}
 
 		if (index_to_node.find({ cur_index[0] - 1, cur_index[1] + 1 }) != index_to_node.end()) {
 			Node* neighbor = index_to_node[{cur_index[0] - 1, cur_index[1] + 1}];
-			/*if (!neighbor->is_obstacle)*/
-				cur_node->neighbors.insert(neighbor);
+			//cur_node->neighbors.insert(neighbor);
+			//cur_node->neighbors["right_top"] = neighbor;
+			//cur_node->neighbors[7] = neighbor;
+			cur_node->neighbors.emplace_back(neighbor);
 		}
 
 		if (index_to_node.find({ cur_index[0] + 1, cur_index[1] - 1 }) != index_to_node.end()) {
 			Node* neighbor = index_to_node[{cur_index[0] + 1, cur_index[1] - 1}];
-			/*if (!neighbor->is_obstacle)*/
-				cur_node->neighbors.insert(neighbor);
+			//cur_node->neighbors.insert(neighbor);
+			//cur_node->neighbors["left_bottom"] = neighbor;
+			//cur_node->neighbors[7] = neighbor;
+			cur_node->neighbors.emplace_back(neighbor);
 		}
 
 		if (index_to_node.find({ cur_index[0] + 1, cur_index[1] + 1 }) != index_to_node.end()) {
 			Node* neighbor = index_to_node[{cur_index[0] + 1, cur_index[1] + 1}];
-			/*if (!neighbor->is_obstacle)*/
-				cur_node->neighbors.insert(neighbor);
+			//cur_node->neighbors.insert(neighbor);
+			//cur_node->neighbors["right_bottom"] = neighbor;
+			//cur_node->neighbors[7] = neighbor;
+			cur_node->neighbors.emplace_back(neighbor);
 		}
 		
 	}

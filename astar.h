@@ -28,7 +28,9 @@ public:
 	double f(Node* cur_node);
 	vector<Node*> searching();
 	vector<Node*> extractPath();
-	bool isBesideObstacle(Node* node);
+	void smoothPath(vector<Node*>& path);
+	int isBesideObstacle(Node* node);
+	vector<Vec2> getCoorPath(const vector<Node*>& path);
 };
 
 #endif

@@ -8,6 +8,7 @@
 #include <map>
 #include <unordered_set>
 #include <iostream>
+#include <string>
 using namespace std;
 using namespace geometry;
 
@@ -18,8 +19,9 @@ struct Node
 	bool is_obstacle;
 	bool is_workbench;
 	int workbench_id;
-	//vector<Node*> neighbors;
-	unordered_set<Node*> neighbors;
+	vector<Node*> neighbors;
+	//unordered_set<Node*> neighbors;
+	//unordered_map<int, Node*> neighbors;
 	
 	void print() {
 		cerr << map_index[0] << ',' << map_index[1] << endl;
