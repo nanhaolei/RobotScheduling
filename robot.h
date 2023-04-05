@@ -3,6 +3,7 @@
 
 #include "workbench.h"
 #include "geometry.h"
+#include <unordered_set>
 #include <vector>
 using namespace std;
 using namespace geometry;
@@ -45,14 +46,15 @@ public:
 	int getCount23();
 	int getCount13();
 
+	double calAngleSpeed_new(const Vec2 target, double& angleToTarget);
 	void calSpeed_new(const Vec2 target, int& lineSpeed, double& angleSpeed);
 	double CalcNeedRotateAngle(const Vec2& point) const;
 	void CalcForwardSpeedAndRotateSpeed(const Vec2 target, int& lineSpeed, double& angleSpeed);
-	double calAngleSpeed_new(const Vec2 target, double& angleToTarget);
 	void move_new();
 	bool isReachNode();
-	void setPath(vector<Vec2> path);
-
+	void addUnreachableBench(int workbench_id);
+	bool isReachable(int workbench_id);
+	
 private:
 	int robotId;
 	int workbenchId;
@@ -70,6 +72,7 @@ private:
 	int waitSellFrame;
 	vector<Vec2> path;
 	Vec2 coordinate;
+	unordered_set<int> unreachableBench;
 
 public:
 	Robot(int _robotId);
@@ -115,6 +118,8 @@ public:
 	int getSellBenchId() const { return sellBenchId; }
 	void setSellBenchId(int id) { sellBenchId = id; }
 	Vec2 getCoordinate() { return Vec2{ coordinate[0], coordinate[1] }; }
+	void setPath(vector<Vec2> path){ this->path = path; }
+	vector<Vec2> getPath() { return path; }
 };
 
 #endif

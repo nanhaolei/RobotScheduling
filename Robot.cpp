@@ -341,7 +341,6 @@ void Robot::checkCollision(vector<Robot> robots, int cur_map) {
 }
 
 
-
 double Robot::calAngleSpeed_new(const Vec2 target, double& angleToTarget) {
 	double r_coor_x = this->getCoordinateX();
 	double r_coor_y = this->getCoordinateY();
@@ -439,8 +438,17 @@ bool Robot::isReachNode()
 		return false;
 }
 
-void Robot::setPath(vector<Vec2> path) {
-	this->path = path;
+void Robot::addUnreachableBench(int workbench_id) {
+	unreachableBench.insert(workbench_id);
+}
+
+bool Robot::isReachable(int workbench_id) {
+	if (unreachableBench.find(workbench_id) != unreachableBench.end()) {
+		return false;
+	}
+	else {
+		return true;
+	}
 }
 
 // ¡Ócount—≠ª∑
