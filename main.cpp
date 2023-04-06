@@ -1064,6 +1064,91 @@ bool compareTime(const int& robotId, const int& buy_bench_id) {
     }
 }
 
+// 计算路径
+vector<Vec2> calPath(Node* start, Node* goal) {
+    vector<Node*> path;
+    if (all_path.find({ start->id,goal->id }) != all_path.end()) {
+        path = all_path[{start->id, goal->id}];
+    }
+    else {
+        AStar astar(start, goal);
+        path = astar.searching();
+        astar.smoothPath(path);
+        all_path[{start->id, goal->id}] = path;
+        for (auto neigh : start->neighbors) {
+            all_path[{neigh->id, goal->id}] = path;
+        }
+    }
+    
+    vector<Vec2> coor_path = AStar::getCoorPath(path);
+    return coor_path;
+}
+
+// 碰撞检测
+void checkCollision() {
+    //bool collision = false;
+    for (int i = 0; i < ROBOT_SIZE; ++i) {
+        robots[i]->setIsCollision(0);
+    }
+    for (int i = 0; i < ROBOT_SIZE; ++i) {
+        auto& robotI = robots[i];
+        if (robotI->getCollisionFrame() > 100) {
+            Node* start = graph->coordinateToNode(robotI->getCoordinate());
+            Node* goal = graph->coordinateToNode(robotI->getStartCoor());
+            if (start->id == goal->id) {
+                continue;
+            }
+            vector<Vec2> coor_path = calPath(start, goal);
+            robotI->setPath(coor_path);
+            for (int j = 0; j < ROBOT_SIZE; ++j) {
+                robots[j]->setCollisionFrame(0);
+            }
+            return;
+        }
+        /*if (collision) 
+            return;*/
+        for (int j = i + 1; j < ROBOT_SIZE; ++j) {
+            /*if (i == j) {
+                continue;
+            }
+            auto& robotI = robots[i];*/
+            auto& robotJ = robots[j];
+            auto dis = robotI->calDistance(*robotJ);
+            double r1 = robotI->getGoodsType() > 0 ? RADUIS_FULL : RADUIS_EMPTY;
+            double r2 = robotJ->getGoodsType() > 0 ? RADUIS_FULL : RADUIS_EMPTY;
+            double cur_angle = robotI->getDirection() > 0 ? robotI->getDirection() : robotI->getDirection() + 2 * PI;
+            double other_angle = robotJ->getDirection() > 0 ? robotJ->getDirection() : robotJ->getDirection() + 2 * PI;
+            double dif = abs(cur_angle - other_angle); // 角度差
+            if (dis <= r1 + r2 + 0.02 && PI / 2 <= dif && dif < PI * 3 / 2) {
+                robotI->addCollisionFrame();
+                robotJ->addCollisionFrame();
+                robotI->setIsCollision(1);
+                robotJ->setIsCollision(1);
+                /*collision = true;
+                Robot* select;
+                if ((robotI->getGoodsType() == 0 && robotJ->getGoodsType() == 0) || (robotI->getGoodsType() > 0 && robotJ->getGoodsType() > 0)) {
+                    select = robotI->getPath().size() < robotJ->getPath().size() ? robotI : robotJ;
+                }
+                else if (robotI->getGoodsType() == 0) {
+                    select = robotI;
+                }
+                else if (robotJ->getGoodsType() == 0) {
+                    select = robotJ;
+                }
+                Node* start = graph->coordinateToNode(select->getCoordinate());
+                Node* goal = graph->coordinateToNode(select->getStartCoor());
+                vector<Vec2> coor_path = calPath(start, goal);
+                select->setPath(coor_path);
+                break;*/
+            }
+        }
+    }
+    for (int i = 0; i < ROBOT_SIZE; ++i) {
+        if(robots[i]->getIsCollision() == 0)
+            robots[i]->setCollisionFrame(0);
+    }
+}
+
 void action_old() {
     for (int robotId = 0; robotId < ROBOT_SIZE; robotId++) {
         int target_bench = robots[robotId]->getTargetBenchId();
@@ -1137,11 +1222,12 @@ void action_old() {
 void action() {
     for (auto& robot : robots) {
         int target_bench = robot->getTargetBenchId();
+        // 计算目标
         if (target_bench == -1) {
             // 买入
             if (robot->getGoodsType() == 0) {
                 target_bench = unitProfitFirst(robot->getRobotId());
-                
+
                 // 剩余时间不足以买4567并卖掉
                 /*if (compareTime(robotId, target_bench)) {
                     target_bench = unitProfitFirst(robotId, true);
@@ -1152,22 +1238,26 @@ void action() {
             }
             // 卖出
             else {
+                target_bench = robot->getSellBenchId();
                 // 回到买入时指定的工作台
-                if (robot->getSellBenchId() != -1) {
-                    target_bench = robot->getSellBenchId();
-                }
-                // 没有指定
-                else {
-                    target_bench = findSellBench(robot->getRobotId());
-                }
+                //if (robot->getSellBenchId() != -1) {
+                //    target_bench = robot->getSellBenchId();
+                //}
+                //// 没有指定
+                //else {
+                //    target_bench = findSellBench(robot->getRobotId());
+                //}
             }
             if (target_bench == -1) {
                 continue;
             }
-
-            // 计算路径
+            robot->setTargetBenchId(target_bench);
+            robot->setTargetBench(workbenchs[target_bench]);
+        }
+        // 计算路径
+        if (robot->getPath().empty() && target_bench != -1) {
             Node* start;
-            if(robot->getWorkbenchId()==-1){
+            if (robot->getWorkbenchId() == -1) {
                 Vec2 start_coor = robot->getCoordinate();
                 start = graph->coordinateToNode(start_coor);
             }
@@ -1175,28 +1265,14 @@ void action() {
                 start = graph->workbenchToNode(robot->getWorkbenchId());
             }
             Node* goal = graph->workbenchToNode(target_bench);
-            vector<Node*> path;
-            if (all_path.find({ start->id,goal->id }) != all_path.end()) {
-                path = all_path[{start->id, goal->id}];
-            }
-            else {
-                AStar astar(start, goal);
-                path = astar.searching();
-                astar.smoothPath(path);
-                all_path[{start->id, goal->id}] = path;
-                for (auto neigh : start->neighbors) {
-                    all_path[{neigh->id, goal->id}] = path;
-                }
-            }
-            vector<Vec2> coor_path = AStar::getCoorPath(path);
-
+            vector<Vec2> coor_path = calPath(start, goal);
             robot->setPath(coor_path);
-            robot->setTargetBenchId(target_bench);
-            robot->setTargetBench(workbenchs[target_bench]);
         }
         robot->move();
-        robot->checkCollision(robots);
+        //robot->checkCollision(robots);
+        
     }
+    checkCollision();
 }
 
 // 读取每帧数据

@@ -19,7 +19,7 @@ namespace geometry {
 		return sqrt(dx * dx  + dy * dy);
 	}
 	inline bool isEq(const Vec2& a, const Vec2& b) {
-		if (abs(a[0] - b[0]) < EPSILON && abs(a[1] - b[1]) < EPSILON)
+		if (abs(a[0] - b[0]) < 0.2 && abs(a[1] - b[1]) < 0.2)
 			return true;
 		else
 			return false;

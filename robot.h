@@ -5,6 +5,7 @@
 #include "geometry.h"
 #include <unordered_set>
 #include <vector>
+#include <cassert>
 using namespace std;
 using namespace geometry;
 
@@ -78,30 +79,47 @@ private:
 	int targetBenchId;
 	int sellBenchId;
 	int waitFrame;
-	int count;
 	int waitSellFrame;
+	int count;
 	vector<Vec2> path;
+	vector<Vec2> rawPath;
 	Vec2 coordinate;
 	unordered_set<int> unreachableBench;
 	Workbench* targetBench;
+	Vec2 startCoor;
+	Vec2 goalCoor;
+	int collisionFrame;
+	int isCollision;
 
 public:
 	Robot(int _robotId);
-	inline void forward(double speed) {
-		printf("forward %d %f\n", this->robotId, speed);
+
+	int getIsCollision() { return isCollision; }
+	void setIsCollision(int is) { isCollision = is; }
+	void addCollisionFrame() {
+		if (this->goodsType == 0)
+			collisionFrame += 2;
+		else
+			collisionFrame += 1;
 	}
-	inline void rotate(double speed) {
-		printf("rotate %d %f\n", this->robotId, speed);
+	int getCollisionFrame() { return collisionFrame; }
+	void setCollisionFrame(int frame) { collisionFrame = frame; }
+	Vec2 getCoordinate() { return Vec2{ coordinate[0], coordinate[1] }; }
+	void setPath(vector<Vec2> path) {
+		this->path = path;
+		if(path.size() > 0) {
+			setStartCoor(path[0]);
+			setGoalCoor(path.back());
+		}
 	}
-	inline void buy() {
-		printf("buy %d\n", this->robotId);
-	}
-	inline void sell() {
-		printf("sell %d\n", this->robotId);
-	}
-	inline void destroy() {
-		printf("destroy %d\n", this->robotId);
-	}
+	vector<Vec2> getPath() { return path; }
+	void setTargetBench(Workbench* workbench) { targetBench = workbench; }
+	Workbench* getTargetBench() { return targetBench; }
+	void setStartCoor(Vec2 startCoor) { this->startCoor = startCoor; }
+	Vec2 getStartCoor() { return startCoor; }
+	void setGoalCoor(Vec2 goalCoor) { this->goalCoor = goalCoor; }
+	Vec2 getsetGoalCoor() { return goalCoor; }
+
 	int getRobotId() const { return robotId; }
 	void setRobotId(int id) { robotId = id; }
 	int getWorkbenchId() const { return workbenchId; }
@@ -128,11 +146,22 @@ public:
 	void setTargetBenchId(int id) { targetBenchId = id; }
 	int getSellBenchId() const { return sellBenchId; }
 	void setSellBenchId(int id) { sellBenchId = id; }
-	Vec2 getCoordinate() { return Vec2{ coordinate[0], coordinate[1] }; }
-	void setPath(vector<Vec2> path){ this->path = path; }
-	vector<Vec2> getPath() { return path; }
-	void setTargetBench(Workbench* workbench) { targetBench = workbench; }
-	Workbench* getTargetBench() { return targetBench; }
+	inline void forward(double speed) {
+		printf("forward %d %f\n", this->robotId, speed);
+	}
+	inline void rotate(double speed) {
+		printf("rotate %d %f\n", this->robotId, speed);
+	}
+	inline void buy() {
+		printf("buy %d\n", this->robotId);
+	}
+	inline void sell() {
+		printf("sell %d\n", this->robotId);
+	}
+	inline void destroy() {
+		printf("destroy %d\n", this->robotId);
+	}
+
 };
 
 #endif

@@ -422,7 +422,7 @@ void Robot::checkCollision(vector<Robot*> robots) {
 			}*/
 			double r1 = this->goodsType > 0 ? RADUIS_FULL : RADUIS_EMPTY;
 			double r2 = robot->goodsType > 0 ? RADUIS_FULL : RADUIS_EMPTY;
-			if (distance < r1+r2+0.002 && PI / 2 <= dif && dif < PI * 3 / 2) {
+			if (distance < r1 + r2 + 0.002 && PI / 2 <= dif && dif < PI * 3 / 2) {
 				if (this->coordinate[0] < robot->getCoordinateX()) {
 					if (this->direction > 0) {
 						//robotI.eW += Robot::MAX_ANGLE_SPEED / 4.5;
@@ -443,7 +443,7 @@ void Robot::checkCollision(vector<Robot*> robots) {
 						this->rotate(offset_angle);
 					}
 				}
-				this->forward(-2);
+				//this->forward(-2);
 			}
 
 			// 同时去墙边
@@ -529,15 +529,17 @@ void Robot::CalcForwardSpeedAndRotateSpeed(const Vec2& target, int& lineSpeed, d
 }
 
 void Robot::move() {
-	if (isReachNode() && path.size() > 1) {
-		path.erase(path.begin());
+	if (this->path.size() > 1 && isReachNode()) {
+		this->path.erase(this->path.begin());
 	}
 	int lineSpeed = 0;
 	double angleSpeed = 0;
-	//calSpeed(path[0], lineSpeed, angleSpeed);
-	CalcForwardSpeedAndRotateSpeed(path[0], lineSpeed, angleSpeed);
-	this->forward(lineSpeed);
-	this->rotate(angleSpeed);
+	if(this->path.size() > 0){
+		//calSpeed(path[0], lineSpeed, angleSpeed);
+		CalcForwardSpeedAndRotateSpeed(this->path[0], lineSpeed, angleSpeed);
+		this->forward(lineSpeed);
+		this->rotate(angleSpeed);
+	}
 
 	// 已到达目标工作台
 	if (this->workbenchId == this->targetBenchId) {
@@ -563,12 +565,13 @@ void Robot::move() {
 				this->path.clear();
 			}
 		}
-		
+	}
+	else if (isEq(this->coordinate, this->goalCoor)) {
+		this->path.clear();
 	}
 }
 
-bool Robot::isReachNode()
-{
+bool Robot::isReachNode() {
 	double distance_eps = 0.4;
 	if (abs(coordinate[0] - path[0][0]) < distance_eps && abs(coordinate[1] - path[0][1]) < distance_eps)
 		return true;
@@ -638,5 +641,8 @@ Robot::Robot(int _robotId): robotId(_robotId) {
 	waitSellFrame = 0;
 
 	count = 1;
+	targetBench = nullptr;
+	collisionFrame = 0;
+	isCollision = 0;
 };
 

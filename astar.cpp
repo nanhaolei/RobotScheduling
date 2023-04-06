@@ -1,7 +1,10 @@
 #include "astar.h"
 #include <iostream>
+#include <cassert>
 
 vector<Node*> AStar::searching() {
+	if (start->id == goal->id)
+		return {};
 	f_compare compare = { this };
 	open = priority_queue<Node*, vector<Node*>, f_compare>(compare);
 	parent[start] = start;
@@ -46,6 +49,8 @@ vector<Node*> AStar::extractPath() {
 }
 
 void AStar::smoothPath(vector<Node*>& path) {
+	if (path.size() < 100)
+		return;
 	int maxIter = 100;
 	int iter = 0;
 	bool changed = true;
@@ -109,9 +114,10 @@ int AStar::isBesideObstacle(Node* node) {
 			return 2;
 		}
 		// 节点斜向有障碍
-		//else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
-		//	return 1;
-		//}
+		else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
+			return 1;
+		}
+
 		//for (auto nei : neighbors) {
 		//	for (auto nei_nei : nei->neighbors) {
 		//		// 节点上下左右有障碍
@@ -124,20 +130,21 @@ int AStar::isBesideObstacle(Node* node) {
 		//		}
 		//	}
 		//}
-		else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
-			for (auto nei : neighbors) {
-				for (auto nei_nei : nei->neighbors) {
-					// 节点上下左右有障碍
-					if (neighbors[0]->is_obstacle || neighbors[1]->is_obstacle || neighbors[2]->is_obstacle || neighbors[3]->is_obstacle) {
-						return 2;
-					}
-					// 节点斜向有障碍
-					else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
-						return 1;
-					}
-				}
-			}
-		}
+
+		//else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
+		//	for (auto nei : neighbors) {
+		//		for (auto nei_nei : nei->neighbors) {
+		//			// 节点上下左右有障碍
+		//			if (neighbors[0]->is_obstacle || neighbors[1]->is_obstacle || neighbors[2]->is_obstacle || neighbors[3]->is_obstacle) {
+		//				return 2;
+		//			}
+		//			// 节点斜向有障碍
+		//			else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
+		//				return 1;
+		//			}
+		//		}
+		//	}
+		//}
 		
 	}
 	
