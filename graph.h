@@ -14,6 +14,7 @@ using namespace geometry;
 
 struct Node
 {
+	int id;
 	array<int, 2> map_index;
 	Vec2 coordinate;
 	bool is_obstacle;

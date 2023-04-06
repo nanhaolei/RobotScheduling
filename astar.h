@@ -30,7 +30,7 @@ public:
 	vector<Node*> extractPath();
 	void smoothPath(vector<Node*>& path);
 	int isBesideObstacle(Node* node);
-	vector<Vec2> getCoorPath(const vector<Node*>& path);
+	static vector<Vec2> getCoorPath(const vector<Node*>& path);
 };
 
 #endif

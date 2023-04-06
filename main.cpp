@@ -1,11 +1,10 @@
 ﻿#include <iostream>
-#include <fstream>
 #include <vector>
 #include <sstream>
-#include <queue>
 #include <cmath>
 #include <climits>
 #include <cassert>
+#include <map>
 #include "robot.h"
 #include "graph.h"
 #include "astar.h"
@@ -28,6 +27,7 @@ int frame_id = 0;
 char map_data[MAP_SIZE][MAP_SIZE];
 int cur_map = 0;
 Graph* graph = new Graph();
+map<array<int, 2>, vector<Node*>> all_path;
 
 // 目标冲突检测
 bool checkConflict(const int& robotId, const int& target_bench) {
@@ -580,7 +580,16 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
     }
 
     int bench_type = workbenchs[workbenchId]->getType();
-    double distance = robots[robotId]->calDistance(*workbenchs[workbenchId]);
+    //distance = robots[robotId]->calDistance(*workbenchs[workbenchId]);
+    double distance = 0;
+    int cur_node = graph->coordinateToNode(robots[robotId]->getCoordinate())->id;
+    int bench_node = graph->workbenchToNode(workbenchId)->id;
+    if (all_path.find({ cur_node, bench_node }) != all_path.end()) {
+        distance = all_path[{ cur_node, bench_node }].size() * 1.0;
+    }
+    else {
+        distance = robots[robotId]->calDistance(*workbenchs[workbenchId]);
+    }
     double speed = MAX_FORWARD_SPEED;
     double offset = 1.1;
     double move_time = distance / speed * offset;
@@ -841,7 +850,15 @@ int unitProfitFirst(const int& robotId, const bool& last = false) {
         int goods_type = buy_bench->getType();
         vector<Workbench*> sell_benchs = findSellBenchs(goods_type);
         for (auto sell_bench : sell_benchs) {
-            double distance = buy_bench->calDistance(*sell_bench);
+            double distance = 0;
+            int buy_bench_node = graph->workbenchToNode(buy_bench_id)->id;
+            int sell_bench_node = graph->workbenchToNode(sell_bench->getWorkbenchId())->id;
+            if (all_path.find({ buy_bench_node,sell_bench_node }) != all_path.end()) {
+                distance = all_path[{ buy_bench_node, sell_bench_node }].size()*1.0;
+            }
+            else {
+                distance = buy_bench->calDistance(*sell_bench);
+            }
             double actual_time;
             double sell_time = calSellPriority(robotId, distance, sell_bench->getWorkbenchId(), goods_type, actual_time, last);
             if (sell_time == INT_MAX) {
@@ -1149,14 +1166,31 @@ void action() {
             }
 
             // 计算路径
-            Vec2 start_coor = robot->getCoordinate();
-            Node* start = graph->coordinateToNode(start_coor);
+            Node* start;
+            if(robot->getWorkbenchId()==-1){
+                Vec2 start_coor = robot->getCoordinate();
+                start = graph->coordinateToNode(start_coor);
+            }
+            else {
+                start = graph->workbenchToNode(robot->getWorkbenchId());
+            }
             Node* goal = graph->workbenchToNode(target_bench);
-            AStar astar(start, goal);
-            vector<Node*> path = astar.searching();
-            astar.smoothPath(path);
-            vector<Vec2> path_coor = astar.getCoorPath(path);
-            robot->setPath(path_coor);
+            vector<Node*> path;
+            if (all_path.find({ start->id,goal->id }) != all_path.end()) {
+                path = all_path[{start->id, goal->id}];
+            }
+            else {
+                AStar astar(start, goal);
+                path = astar.searching();
+                astar.smoothPath(path);
+                all_path[{start->id, goal->id}] = path;
+                for (auto neigh : start->neighbors) {
+                    all_path[{neigh->id, goal->id}] = path;
+                }
+            }
+            vector<Vec2> coor_path = AStar::getCoorPath(path);
+
+            robot->setPath(coor_path);
             robot->setTargetBenchId(target_bench);
             robot->setTargetBench(workbenchs[target_bench]);
         }
@@ -1313,8 +1347,8 @@ void judgeMap() {
     }
 }
 
-// 初始化机器人与工作台的可达情况
-void calReachable() {
+// 计算机器人初始位置与所有工作台的路径
+void initPath() {
     for (auto& robot : robots) {
         for (auto& workbench : workbenchs)
         {
@@ -1326,6 +1360,9 @@ void calReachable() {
             if (path.size() == 0) {
                 robot->addUnreachableBench(workbench->getWorkbenchId());
             }
+            else {
+                all_path[{start->id, goal->id}] = path;
+            }
         }
     }
 }
@@ -1334,7 +1371,7 @@ void calReachable() {
 void init() {
     readMap();
     classify();
-    calReachable();
+    initPath();
     //judgeMap();
 
     puts("OK");

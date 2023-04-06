@@ -339,7 +339,7 @@ void Robot::checkCollision(vector<Robot*> robots) {
 		double distance = this->calDistance(*robot);
 		double check_distance = 3;
 		double spped_check_distance = 2;
-		double check_angle = PI / 8;
+		double check_angle = PI / 12;
 
 		if (robot->getRobotId() != this->robotId) {
 			double other_coor[2]{ robot->getCoordinateX(),robot->getCoordinateY() };
@@ -420,7 +420,9 @@ void Robot::checkCollision(vector<Robot*> robots) {
 			/*if (distance < RADUIS_FULL * 2.1 && PI / 2 <= dif && dif < PI * 3 / 2) {
 				this->rotate(offset_angle);
 			}*/
-			if (distance < RADUIS_FULL * 2.1 && PI / 2 <= dif && dif < PI * 3 / 2) {
+			double r1 = this->goodsType > 0 ? RADUIS_FULL : RADUIS_EMPTY;
+			double r2 = robot->goodsType > 0 ? RADUIS_FULL : RADUIS_EMPTY;
+			if (distance < r1+r2+0.002 && PI / 2 <= dif && dif < PI * 3 / 2) {
 				if (this->coordinate[0] < robot->getCoordinateX()) {
 					if (this->direction > 0) {
 						//robotI.eW += Robot::MAX_ANGLE_SPEED / 4.5;
@@ -441,14 +443,14 @@ void Robot::checkCollision(vector<Robot*> robots) {
 						this->rotate(offset_angle);
 					}
 				}
+				this->forward(-2);
 			}
-
 
 			// 同时去墙边
-			if (between_angle < PI / 3 && distance < RADUIS_FULL * 12 && robot->isBesideBoundary()) {
+			/*if (between_angle < PI / 3 && distance < RADUIS_FULL * 12 && robot->isBesideBoundary()) {
 				this->forward(3);
 				this->rotate(offset_angle);
-			}
+			}*/
 			// 同时去一个工作台
 			/*if (between_angle < PI / 3 && distance < RADUIS_FULL * 12 && robot->getTargetBenchId() == this->getTargetBenchId()) {
 				this->forward(3);

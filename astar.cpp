@@ -146,10 +146,10 @@ int AStar::isBesideObstacle(Node* node) {
 
 vector<Vec2> AStar::getCoorPath(const vector<Node*>& path)
 {
-	vector<Vec2> path_coor;
+	vector<Vec2> coor_path;
 	for (auto node : path) {
-		path_coor.emplace_back(node->coordinate);
+		coor_path.emplace_back(node->coordinate);
 	}
-	return path_coor;
+	return coor_path;
 }
 

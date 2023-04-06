@@ -13,10 +13,13 @@ void Graph::init(char map[MAP_SIZE][MAP_SIZE]) {
 
 void Graph::initNodes(char map[MAP_SIZE][MAP_SIZE]) {
 	int workbench_id = 0;
+	int id = 0;
 	// 从左上角开始
 	for (int i = 0; i < MAP_SIZE; i++) {
 		for (int j = 0; j < MAP_SIZE; j++) {
 			Node* node = new Node();
+			node->id = id;
+			++id;
 			node->coordinate[0] = 0.25 + j * 0.5; // x坐标
 			node->coordinate[1] = 0.25 + (MAP_SIZE - 1 - i) * 0.5; // y坐标
 			// 障碍物
@@ -37,7 +40,7 @@ void Graph::initNodes(char map[MAP_SIZE][MAP_SIZE]) {
 				node->is_workbench = false;
 				node->workbench_id = -1;
 			}
-			node->map_index = { i,j };
+			node->map_index = { i, j };
 			nodes.emplace_back(node);
 			index_to_node[{i, j}] = node;
 		}
