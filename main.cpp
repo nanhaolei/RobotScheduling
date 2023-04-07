@@ -7,6 +7,7 @@
 #include "robot.h"
 #include "graph.h"
 #include "astar.h"
+#include "dstar.h"
 #include <algorithm>
 #ifdef _WIN32
 #include <ctime>
@@ -1089,6 +1090,7 @@ vector<Vec2> calPath(Node* start, Node* goal) {
         coor_path = AStar::getCoorPath(path);
     }
     else {
+        //DStar astar(start, goal, graph);
         AStar astar(start, goal);
         path = astar.searching();
         astar.smoothPath(path);
@@ -1108,7 +1110,6 @@ vector<Vec2> calPath(Node* start, Node* goal) {
     //coor_path = AStar::getCoorPath(path);
     return coor_path;
 }
-
 
 // TODO：回退过程中与其他机器人的距离大于阈值 则停止回退
 // 碰撞检测
