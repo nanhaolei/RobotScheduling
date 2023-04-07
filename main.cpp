@@ -7,7 +7,7 @@
 #include "robot.h"
 #include "graph.h"
 #include "astar.h"
-#include "dstar.h"
+//#include "dstar.h"
 #include <algorithm>
 #ifdef _WIN32
 #include <ctime>
@@ -1111,69 +1111,75 @@ vector<Vec2> calPath(Node* start, Node* goal) {
     return coor_path;
 }
 
-// TODO：回退过程中与其他机器人的距离大于阈值 则停止回退
 // 碰撞检测
 void checkCollision() {
-    //bool collision = false;
-    for (int i = 0; i < ROBOT_SIZE; ++i) {
-        robots[i]->setIsCollision(0);
-    }
+    /*for (auto robot : robots) {
+        robot->setIsCollision(0);
+    }*/
     for (int i = 0; i < ROBOT_SIZE; ++i) {
         auto& robotI = robots[i];
+        // 阻塞时长超过阈值
         if (robotI->getCollisionFrame() > 100) {
+            // 回退到起点
             Node* start = graph->coordinateToNode(robotI->getCoordinate());
+            vector<Vec2> raw_path = robotI->getPath();
+            //Node* goal = graph->coordinateToNode(raw_path[raw_path.size() / 2]);
             Node* goal = graph->coordinateToNode(robotI->getStartCoor());
             if (start->id == goal->id) {
                 continue;
             }
             vector<Vec2> coor_path = calPath(start, goal);
             robotI->setPath(coor_path);
+            // 重置阻塞时长
             for (int j = 0; j < ROBOT_SIZE; ++j) {
                 robots[j]->setCollisionFrame(0);
             }
+            // 设置运动状态为避让
+            robots[i]->setMoveStatus(1);
             return;
         }
-        /*if (collision) 
-            return;*/
         for (int j = i + 1; j < ROBOT_SIZE; ++j) {
-            /*if (i == j) {
-                continue;
-            }
-            auto& robotI = robots[i];*/
             auto& robotJ = robots[j];
             auto dis = robotI->calDistance(*robotJ);
             double r1 = robotI->getGoodsType() > 0 ? RADUIS_FULL : RADUIS_EMPTY;
             double r2 = robotJ->getGoodsType() > 0 ? RADUIS_FULL : RADUIS_EMPTY;
             double cur_angle = robotI->getDirection() > 0 ? robotI->getDirection() : robotI->getDirection() + 2 * PI;
             double other_angle = robotJ->getDirection() > 0 ? robotJ->getDirection() : robotJ->getDirection() + 2 * PI;
-            double dif = abs(cur_angle - other_angle); // 角度差
+            double dif = abs(cur_angle - other_angle);
+            // 产生碰撞 记录阻塞时长
             if (dis <= r1 + r2 + 0.02 && PI / 2 <= dif && dif < PI * 3 / 2) {
                 robotI->addCollisionFrame();
                 robotJ->addCollisionFrame();
-                robotI->setIsCollision(1);
-                robotJ->setIsCollision(1);
-                /*collision = true;
-                Robot* select;
-                if ((robotI->getGoodsType() == 0 && robotJ->getGoodsType() == 0) || (robotI->getGoodsType() > 0 && robotJ->getGoodsType() > 0)) {
-                    select = robotI->getPath().size() < robotJ->getPath().size() ? robotI : robotJ;
-                }
-                else if (robotI->getGoodsType() == 0) {
-                    select = robotI;
-                }
-                else if (robotJ->getGoodsType() == 0) {
-                    select = robotJ;
-                }
-                Node* start = graph->coordinateToNode(select->getCoordinate());
-                Node* goal = graph->coordinateToNode(select->getStartCoor());
-                vector<Vec2> coor_path = calPath(start, goal);
-                select->setPath(coor_path);
-                break;*/
+                /*robotI->setIsCollision(1);
+                robotJ->setIsCollision(1);*/
             }
         }
     }
     for (int i = 0; i < ROBOT_SIZE; ++i) {
-        if(robots[i]->getIsCollision() == 0)
-            robots[i]->setCollisionFrame(0);
+        auto& robotI = robots[i];
+        // 没有产生碰撞 重置阻塞时长
+        /*if (robotI->getIsCollision() == 0) {
+            robotI->setCollisionFrame(0);
+        }*/
+        // 运动状态为正常状态 
+        if (robotI->getMoveStatus() == 0) continue;
+        // 计算与其他机器人的距离是否大于阈值
+        int count = 0;
+        for (int j = 0; j < ROBOT_SIZE; ++j) {
+            if (i == j) continue;
+            if (robotI->calDistance(*robots[j]) > 3) {
+                count++;
+            }
+        }
+        // 与其他机器人距离都大于阈值 停止避让 回到原目标
+        if (count == 3) {
+            Node* start = graph->coordinateToNode(robotI->getCoordinate());
+            Node* goal = graph->workbenchToNode(robotI->getWorkbenchId());
+            vector<Vec2> coor_path = calPath(start, goal);
+            robotI->setCollisionFrame(0);
+            robotI->setPath(coor_path);
+            robotI->setMoveStatus(0);
+        }
     }
 }
 

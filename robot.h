@@ -90,17 +90,21 @@ private:
 	Vec2 goalCoor;
 	int collisionFrame;
 	int isCollision;
+	int moveStatus;
 
 public:
 	Robot(int _robotId);
 
+	int getMoveStatus() { return moveStatus; }
+	void setMoveStatus(int status) { moveStatus = status; }
 	int getIsCollision() { return isCollision; }
 	void setIsCollision(int is) { isCollision = is; }
 	void addCollisionFrame() {
-		if (this->goodsType == 0)
+		/*if (this->goodsType == 0)
 			collisionFrame += 2;
 		else
-			collisionFrame += 1;
+			collisionFrame += 1;*/
+		collisionFrame += 2;
 	}
 	int getCollisionFrame() { return collisionFrame; }
 	void setCollisionFrame(int frame) { collisionFrame = frame; }

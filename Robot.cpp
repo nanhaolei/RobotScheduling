@@ -656,5 +656,6 @@ Robot::Robot(int _robotId): robotId(_robotId) {
 	targetBench = nullptr;
 	collisionFrame = 0;
 	isCollision = 0;
+	moveStatus = 0;
 };
 
