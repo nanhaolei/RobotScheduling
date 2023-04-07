@@ -132,7 +132,7 @@ Node* Graph::workbenchToNode(int workbench_id) {
 
 Node* Graph::coordinateToNode(Vec2 coordinate) {
 	for (auto node : nodes) {
-		if (abs(node->coordinate[0] - coordinate[0]) < JUDGE_DISTANCE && abs(node->coordinate[1] - coordinate[1]) < JUDGE_DISTANCE) {
+		if (abs(node->coordinate[0] - coordinate[0]) < GRID_LENGTH / 2 && abs(node->coordinate[1] - coordinate[1]) < GRID_LENGTH / 2) {
 			return node;
 		}
 	}

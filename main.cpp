@@ -347,7 +347,11 @@ double calSellPriority(const int& robotId, const double& distance, const int& wo
     double rest_time = workbenchs[workbenchId]->getRestFrame() / static_cast<double>(FPS);
 
     // 降低123456卖到9的优先级
-    if (bench_type == 9 && goods_type != 7 && workbenchs_7.size() > 0) {
+    /*if (bench_type == 9 && goods_type != 7 && workbenchs_7.size() > 0) {
+        return INT_MAX - 1;
+    }*/
+    // 降低123卖到9的优先级
+    if (bench_type == 9 && (goods_type == 1 || goods_type == 2 || goods_type == 3 )) {
         return INT_MAX - 1;
     }
 
@@ -382,11 +386,11 @@ double calSellPriority(const int& robotId, const double& distance, const int& wo
         {
             // 只缺一个 
             if (full_count == 2) {
-                coefficient *= 6;
+                coefficient *= 2;
             }
             // 缺两个 
             if (full_count == 1) {
-                coefficient *= 3;
+                coefficient *= 1;
             }
             // 缺三个
             if (full_count == 0) {
@@ -407,21 +411,21 @@ double calSellPriority(const int& robotId, const double& distance, const int& wo
     else if ((bench_type == 4 || bench_type == 5 || bench_type == 6)) {
         double coefficient = 1.0;
         // 7没有该材料
-        for (auto bench : workbenchs_7) {
+        /*for (auto bench : workbenchs_7) {
             if (bench->getRestFrame() < 0 && !bench->getReservedMaterial(bench_type))
             {
-                coefficient *= 8;
+                coefficient *= 2;
             }
-        }
+        }*/
         // 材料格空余 且 只缺一个
         if (material_status && full_count == 1) {
             // 有7
             if (workbenchs_7.size() > 0) {
-                coefficient *= 3;
+                coefficient *= 2;
             }
             // 无7
             else {
-                coefficient *= 3;
+                coefficient *= 2;
             }
         }
         // 产品格有产品
@@ -1084,6 +1088,8 @@ vector<Vec2> calPath(Node* start, Node* goal) {
     return coor_path;
 }
 
+
+// TODO：回退过程中与其他机器人的距离大于阈值 则停止回退
 // 碰撞检测
 void checkCollision() {
     //bool collision = false;

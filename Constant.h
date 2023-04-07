@@ -26,5 +26,6 @@ constexpr int MAP_SIZE = 100;
 
 constexpr double EPSILON = 1e-7;
 constexpr double MIN_ANGLE = 0.08;
+constexpr double GRID_LENGTH = 0.5;
 
 #endif
