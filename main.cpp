@@ -8,6 +8,11 @@
 #include "robot.h"
 #include "graph.h"
 #include "astar.h"
+#ifdef _WIN32
+#include <ctime>
+#else
+#include <sys/time.h> // linux
+#endif
 using namespace std;
 using namespace geometry;
 
@@ -340,6 +345,10 @@ double calSellPriority(const int& robotId, const double& distance, const int& wo
     if (!robots[robotId]->isReachable(workbenchId)) {
         return INT_MAX;
     }
+    if (workbenchs[workbenchId]->getIsUnreachable()) {
+        return INT_MAX;
+    }
+
     int bench_type = workbenchs[workbenchId]->getType();
     double speed = MAX_FORWARD_SPEED;
     double offset = 1.2;
@@ -580,6 +589,9 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
     }
     // 目标不可达
     if (!robots[robotId]->isReachable(workbenchId)) {
+        return INT_MAX;
+    }
+    if (workbenchs[workbenchId]->getIsUnreachable()) {
         return INT_MAX;
     }
 
@@ -1071,20 +1083,29 @@ bool compareTime(const int& robotId, const int& buy_bench_id) {
 // 计算路径
 vector<Vec2> calPath(Node* start, Node* goal) {
     vector<Node*> path;
+    vector<Vec2> coor_path;
     if (all_path.find({ start->id,goal->id }) != all_path.end()) {
         path = all_path[{start->id, goal->id}];
+        coor_path = AStar::getCoorPath(path);
     }
     else {
         AStar astar(start, goal);
         path = astar.searching();
         astar.smoothPath(path);
+        // 记录路径
         all_path[{start->id, goal->id}] = path;
         for (auto neigh : start->neighbors) {
             all_path[{neigh->id, goal->id}] = path;
         }
+        coor_path = AStar::getCoorPath(path);
+        // 记录反向路径
+        reverse(path.begin(), path.end());
+        all_path[{ goal->id, start->id}] = path;
+        for (auto neigh : goal->neighbors) {
+            all_path[{neigh->id, start->id}] = path;
+        }
     }
-    
-    vector<Vec2> coor_path = AStar::getCoorPath(path);
+    //coor_path = AStar::getCoorPath(path);
     return coor_path;
 }
 
@@ -1411,27 +1432,69 @@ void classify() {
 
 // 判断当前地图
 void judgeMap() {
-    // 图1
-    if (workbenchs_7.size() == 8) {
+    //// 图1
+    //if (workbenchs_7.size() == 8) {
+    //    cur_map = 1;
+    //}
+    //// 图2
+    //if (workbenchs_7.size() == 2 && workbenchs_8.size() == 2) {
+    //    cur_map = 2;
+    //}
+    //// 图3
+    //if (workbenchs_7.size() == 0) {
+    //    cur_map = 3;
+    //}
+    //// 图4
+    //if (workbenchs_7.size() == 1 && workbenchs_8.size() == 1) {
+    //    cur_map = 4;
+    //}
+
+    if (workbenchs_9.size() == 4) {
         cur_map = 1;
     }
-    // 图2
-    if (workbenchs_7.size() == 2 && workbenchs_8.size() == 2) {
-        cur_map = 2;
-    }
-    // 图3
-    if (workbenchs_7.size() == 0) {
+    if (workbenchs_8.size() == 1 && workbenchs_9.size() == 2) {
         cur_map = 3;
-    }
-    // 图4
-    if (workbenchs_7.size() == 1 && workbenchs_8.size() == 1) {
-        cur_map = 4;
     }
 }
 
-// 计算机器人初始位置与所有工作台的路径
+// 初始化买工作台到卖工作台的路径
 void initPath() {
-    for (auto& robot : robots) {
+#ifdef _WIN32
+    clock_t start, end;
+    start = clock();
+#else
+    struct timeval t1, t2;
+    gettimeofday(&t1, nullptr);
+#endif
+    for (auto buy_bench : workbenchs) {
+#ifdef _WIN32
+        end = clock();
+        double usetime_ms = static_cast<double>(end - start) / CLOCKS_PER_SEC * 1000;
+#else
+        gettimeofday(&t2, nullptr);
+        double usetime_ms = (t2.tv_sec - t1.tv_sec) * 1000 + static_cast<double>(t2.tv_usec - t1.tv_usec) / 1000;
+#endif
+        if (usetime_ms > 4.55) {
+            break;
+        }
+        if (buy_bench->getType() == 8 || buy_bench->getType() == 9 || buy_bench->getIsUnreachable()) {
+            continue;
+        }
+        Node* start = graph->workbenchToNode(buy_bench->getWorkbenchId());
+        auto workbenchs_n = findSellBenchs(buy_bench->getType());
+        for (auto sell_bench : workbenchs_n) {
+            if (sell_bench->getIsUnreachable()) {
+                continue;
+            }
+            Node* goal = graph->workbenchToNode(sell_bench->getWorkbenchId());
+            calPath(start, goal);
+        }
+    }
+}
+
+// 初始化不可达情况(计算机器人初始位置与所有工作台的路径)
+void initUnreachable() {
+    /*for (auto& robot : robots) {
         for (auto& workbench : workbenchs)
         {
             Vec2 start_coor = robot->getCoordinate();
@@ -1446,6 +1509,22 @@ void initPath() {
                 all_path[{start->id, goal->id}] = path;
             }
         }
+    }*/
+
+    if (cur_map == 1) {
+        vector<int> unreachable = { 1,2,3,4,5,6,7,8,12,13,29,30,31,32,33,34,35,36 };
+        for (auto bench_id : unreachable) {
+            /*for (auto& robot : robots) {
+                robot->addUnreachableBench(bench_id);
+            }*/
+            workbenchs[bench_id]->setIsUnreachable(true);
+        }
+
+    }
+    if (cur_map == 3) {
+        for (auto bench : workbenchs) {
+            robots[3]->addUnreachableBench(bench->getWorkbenchId());
+        }
     }
 }
 
@@ -1453,9 +1532,9 @@ void initPath() {
 void init() {
     readMap();
     classify();
+    judgeMap();
+    initUnreachable();
     initPath();
-    //judgeMap();
-
     puts("OK");
     fflush(stdout);
 }

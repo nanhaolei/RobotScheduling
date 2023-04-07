@@ -35,9 +35,12 @@ private:
 	int productStatus;
 	unordered_map <int, bool> reservedMaterial;
 	unordered_map <int, bool> holdMaterial;
+	bool isUnreachable;
 public:
 	Workbench(int _workbenchId, int _type);
 	Workbench(){};
+	bool getIsUnreachable() const { return isUnreachable; }
+	void setIsUnreachable(bool is) { isUnreachable = is; }
 	int getWorkbenchId() const { return workbenchId; }
 	void setWorkbenchId(int id) { workbenchId = id; }
 	int getType() const { return type; }

@@ -197,5 +197,6 @@ Workbench::Workbench(int _workbenchId, int _type) :workbenchId(_workbenchId), ty
 		{6,false},
 		{7,false}
 	};
+	isUnreachable = false;
 };
 

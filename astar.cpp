@@ -49,7 +49,7 @@ vector<Node*> AStar::extractPath() {
 }
 
 void AStar::smoothPath(vector<Node*>& path) {
-	if (path.size() < 100)
+	if (path.size() < 50)
 		return;
 	int maxIter = 100;
 	int iter = 0;

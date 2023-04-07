@@ -566,9 +566,19 @@ void Robot::move() {
 			}
 		}
 	}
+	// 到达回退终点
 	else if (isEq(this->coordinate, this->goalCoor)) {
 		this->path.clear();
 	}
+	// 无路径且不位于工作台上
+	/*else if (this->path.empty()) {
+		this->targetBenchId = -1;
+		if (this->targetBench != nullptr && this->goodsType > 0) {
+			targetBench->setReservedMaterial(this->goodsType, true);
+			this->targetBench = nullptr;
+		}
+		this->sellBenchId = -1;
+	}*/
 }
 
 bool Robot::isReachNode() {
