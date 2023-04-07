@@ -23,7 +23,9 @@ struct Node
 	vector<Node*> neighbors;
 	//unordered_set<Node*> neighbors;
 	//unordered_map<int, Node*> neighbors;
-	
+	bool operator==(const Node& other) const {
+		return coordinate[0] == coordinate[0] && coordinate[1] == coordinate[1];
+	}
 	void print() {
 		cerr << map_index[0] << ',' << map_index[1] << endl;
 	}

@@ -329,7 +329,8 @@ void Robot::checkCollision_old(vector<Robot*> robots, int cur_map) {
 	}
 }
 
-// 碰撞检测
+
+
 void Robot::checkCollision(vector<Robot*> robots) {
 	double offset_angle = PI;
 	double cur_dirction[2]{ cos(this->getDirection()),sin(this->getDirection()) };
@@ -506,7 +507,7 @@ void Robot::CalcForwardSpeedAndRotateSpeed(const Vec2& target, int& lineSpeed, d
 		angleSpeed = 0.;
 	}
 	else {
-		if (absAngle > PI / 2) {
+		if (absAngle > PI / 8) {
 			// 角度太大，全速扭转
 			// 速度控制小一点，避免靠近不了工作台
 			lineSpeed = MAX_FORWARD_SPEED * 0.2;
@@ -529,6 +530,7 @@ void Robot::CalcForwardSpeedAndRotateSpeed(const Vec2& target, int& lineSpeed, d
 }
 
 void Robot::move() {
+	assert(path.size() > 0);
 	if (this->path.size() > 1 && isReachNode()) {
 		this->path.erase(this->path.begin());
 	}

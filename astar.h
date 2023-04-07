@@ -4,13 +4,21 @@
 #include "graph.h"
 #include <queue>
 #include <vector>
+#include <algorithm>
+using namespace std;
+using namespace geometry;
 
 class AStar
 {
 private:
+	struct NodeHash {
+		size_t operator()(Node* node) const {
+			return hash<int>()(node->coordinate[0]) ^ hash<int>()(node->coordinate[1]);
+		}
+	};
 	Node* start;
 	Node* goal;
-	unordered_map<Node*, Node*> parent;
+	unordered_map<Node*, Node*, NodeHash> parent;
 	unordered_map<Node*, double> g;
 	//vector<Node*> closed;
 	struct f_compare {

@@ -3,11 +3,11 @@
 #include <sstream>
 #include <cmath>
 #include <climits>
-#include <cassert>
 #include <map>
 #include "robot.h"
 #include "graph.h"
 #include "astar.h"
+#include <algorithm>
 #ifdef _WIN32
 #include <ctime>
 #else
@@ -1460,23 +1460,13 @@ void judgeMap() {
 // 初始化买工作台到卖工作台的路径
 void initPath() {
 #ifdef _WIN32
-    clock_t start, end;
-    start = clock();
+    clock_t start_time, end_time;
+    start_time = clock();
 #else
     struct timeval t1, t2;
     gettimeofday(&t1, nullptr);
 #endif
     for (auto buy_bench : workbenchs) {
-#ifdef _WIN32
-        end = clock();
-        double usetime_ms = static_cast<double>(end - start) / CLOCKS_PER_SEC * 1000;
-#else
-        gettimeofday(&t2, nullptr);
-        double usetime_ms = (t2.tv_sec - t1.tv_sec) * 1000 + static_cast<double>(t2.tv_usec - t1.tv_usec) / 1000;
-#endif
-        if (usetime_ms > 4.55) {
-            break;
-        }
         if (buy_bench->getType() == 8 || buy_bench->getType() == 9 || buy_bench->getIsUnreachable()) {
             continue;
         }
@@ -1488,6 +1478,16 @@ void initPath() {
             }
             Node* goal = graph->workbenchToNode(sell_bench->getWorkbenchId());
             calPath(start, goal);
+        }
+#ifdef _WIN32
+        end_time = clock();
+        double usetime_ms = static_cast<double>(end_time - start_time) / CLOCKS_PER_SEC * 1000;
+#else
+        gettimeofday(&t2, nullptr);
+        double usetime_ms = (t2.tv_sec - t1.tv_sec) * 1000 + static_cast<double>(t2.tv_usec - t1.tv_usec) / 1000;
+#endif
+        if (usetime_ms > 4000) {
+            break;
         }
     }
 }

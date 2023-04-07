@@ -4,7 +4,7 @@
 
 vector<Node*> AStar::searching() {
 	if (start->id == goal->id)
-		return {};
+		return { goal };
 	f_compare compare = { this };
 	open = priority_queue<Node*, vector<Node*>, f_compare>(compare);
 	parent[start] = start;

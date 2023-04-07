@@ -2,6 +2,9 @@
 #define GEOMETRY_H_
 
 #include <array>
+#include <cmath>
+#include <math.h>
+#include <climits>
 #include "constant.h"
 namespace geometry {
 	using Vec2 = std::array<double, 2>;
