@@ -3,6 +3,8 @@
 #include <cassert>
 
 vector<Node*> AStar::searching() {
+	int iter_max = 9000;
+	int iter = 0;
 	if (start->id == goal->id)
 		return { goal };
 	f_compare compare = { this };
@@ -11,7 +13,8 @@ vector<Node*> AStar::searching() {
 	g[start] = 0;
 	g[goal] = INT_MAX;
 	open.push(start);
-	while (!open.empty()) {
+	while (!open.empty() && iter < iter_max) {
+		++iter;
 		Node* cur_node = open.top();
 		open.pop();
 		if (cur_node == goal) {

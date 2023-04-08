@@ -1304,7 +1304,7 @@ void checkCollision() {
 // 检测静止时间是否超过阈值
 void checkStatic() {
     ++frame_count;
-    if (frame_count > 100) {
+    if (frame_count > 80) {
         frame_count = 0;
         for (auto robot : robots) {
             //if (robot->getRobotId() == 3) continue;
