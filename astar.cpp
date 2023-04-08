@@ -16,15 +16,16 @@ vector<Node*> AStar::searching() {
 		open.pop();
 		if (cur_node == goal) {
 			return extractPath();
-			//break;
 		}
 		for (auto neighbor : cur_node->neighbors) {
-			if (neighbor->is_obstacle) continue;
+			/*if (closed.find(neighbor) != closed.end()) 
+				continue;
+			if (neighbor->is_obstacle && *neighbor!=*start)
+				continue;*/
+			if (neighbor->is_obstacle || robot_nodes.find(neighbor)!=robot_nodes.end()) 
+				continue;
+			/*if (neighbor->is_obstacle) continue;*/
 			double new_cost = g[cur_node] + cost(cur_node, neighbor);
-			/*if (g.find(neighbor) == g.end()) {
-				g[neighbor] = INT_MAX;
-			}
-			if (new_cost < g[neighbor]) {*/
 			if (g.find(neighbor) == g.end() || new_cost < g[neighbor]) {
 				g[neighbor] = new_cost;
 				parent[neighbor] = cur_node;
@@ -32,6 +33,7 @@ vector<Node*> AStar::searching() {
 			}
 		}
 	}
+	cerr << "err:AStar::searching()" << endl;
 	// 目标不可达
 	return {};
 }
@@ -71,13 +73,9 @@ void AStar::smoothPath(vector<Node*>& path) {
 }
 
 double AStar::cost(Node* cur_node, Node* neigh_node) {
-	if (isBesideObstacle(neigh_node) == 2) {
-		return INT_MAX;
-	}
-	if (isBesideObstacle(neigh_node) == 1) {
-		return 1000;
-	}
-	return 1.0;
+	double coff = isBesideObstacle(neigh_node);
+	return coff;
+	//return 1.0;
 	//return distance(cur_node->coordinate, neigh_node->coordinate);
 }
 
@@ -103,52 +101,55 @@ double AStar::f(Node* cur_node) {
 
 int AStar::isBesideObstacle(Node* node) {
 	auto neighbors = node->neighbors;
-	// 节点在角落里
-	if (neighbors.size() == 3) {
-		return 2;
+	// 节点在角落里或墙边
+	if (neighbors.size() == 3 || neighbors.size() == 5) {
+		return 10000;
 	}
-	
-	if (neighbors.size() == 8) {
+	// 携带物品
+	if ((cur_robot != nullptr && cur_robot->getGoodsType() > 0) || cur_robot == nullptr) {
 		// 节点上下左右有障碍
 		if (neighbors[0]->is_obstacle || neighbors[1]->is_obstacle || neighbors[2]->is_obstacle || neighbors[3]->is_obstacle) {
-			return 2;
+			return 10000;
 		}
 		// 节点斜向有障碍
 		else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
-			return 1;
+			return 1000;
 		}
-
-		//for (auto nei : neighbors) {
-		//	for (auto nei_nei : nei->neighbors) {
-		//		// 节点上下左右有障碍
-		//		if (neighbors[0]->is_obstacle || neighbors[1]->is_obstacle || neighbors[2]->is_obstacle || neighbors[3]->is_obstacle) {
-		//			return 2;
-		//		}
-		//		// 节点斜向有障碍
-		//		else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
-		//			return 1;
-		//		}
-		//	}
-		//}
-
-		//else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
-		//	for (auto nei : neighbors) {
-		//		for (auto nei_nei : nei->neighbors) {
-		//			// 节点上下左右有障碍
-		//			if (neighbors[0]->is_obstacle || neighbors[1]->is_obstacle || neighbors[2]->is_obstacle || neighbors[3]->is_obstacle) {
-		//				return 2;
-		//			}
-		//			// 节点斜向有障碍
-		//			else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
-		//				return 1;
-		//			}
-		//		}
-		//	}
-		//}
-		
+		// 节点周围障碍物越多 惩罚越大
+		int coff = 1;
+		/*for (auto nei : neighbors) {
+			for (auto nei_nei : nei->neighbors) {
+				if (nei_nei->is_obstacle) {
+					++coff;
+				}
+			}
+		}*/
+		return coff;
 	}
-	
-	return 0;
+	// 不携带物品
+	else {
+		int count = 0;
+		for (int i = 0; i < 4; ++i) {
+			if (neighbors[i]->is_obstacle)
+				++count;
+		}
+		// 上下左右的障碍大于1个
+		if (count > 1)
+			return 10000;
+		else if (count == 1)
+			return 4;
+		// 节点周围障碍物越多 惩罚越大
+		/*int coff = 1;
+		for (auto nei : neighbors) {
+			for (auto nei_nei : nei->neighbors) {
+				if (nei_nei->is_obstacle) {
+					++coff;
+				}
+			}
+		}
+		return coff;*/
+	}
+	return 1;
 }
 
 vector<Vec2> AStar::getCoorPath(const vector<Node*>& path)

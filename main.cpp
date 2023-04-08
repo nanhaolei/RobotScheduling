@@ -8,6 +8,7 @@
 #include "graph.h"
 #include "astar.h"
 //#include "dstar.h"
+#include "rrt.h"
 #include <algorithm>
 #ifdef _WIN32
 #include <ctime>
@@ -34,6 +35,7 @@ char map_data[MAP_SIZE][MAP_SIZE];
 int cur_map = 0;
 Graph* graph = new Graph();
 map<array<int, 2>, vector<Node*>> all_path;
+int frame_count = 0;
 
 // 目标冲突检测
 bool checkConflict(const int& robotId, const int& target_bench) {
@@ -1059,67 +1061,104 @@ int judge_1(const int& robotId) {
     return goods_type;
 }
 
-// 比较当前路径需要的总时间与剩余时间
-bool compareTime(const int& robotId, const int& buy_bench_id) {
-    int sell_bench_id = robots[robotId]->getSellBenchId();
-    if (buy_bench_id == -1 || sell_bench_id == -1) return false;
-
-    double offset = 1.2;
-    // 计算到买入工作台的时间
-    double buy_distance = robots[robotId]->calDistance(*workbenchs[buy_bench_id]);
-    double buy_time = buy_distance / MAX_FORWARD_SPEED * offset;
-    // 从买入工作台到卖出工作台的时
-    double sell_distance = workbenchs[buy_bench_id]->calDistance(*workbenchs[sell_bench_id]);
-    double sell_time = sell_distance / MAX_FORWARD_SPEED * offset;
-    int rest_frame = TOTAL_FRAME - frame_id;
-    // 剩余时间不足
-    if (buy_time + sell_time > rest_frame / static_cast<double>(FPS)) {
-        return true;
+// 记录除自己以外的机器人所在节点
+unordered_set<Node*> getOtherRobotNodes(Robot* cur_robot) {
+    unordered_set<Node*> robot_nodes;
+    for (auto robot : robots) {
+        if (robot->getRobotId() != cur_robot->getRobotId()) {
+            Node* obstacle = graph->robotToNode(robot);
+            robot_nodes.insert(obstacle);
+        }
     }
-    else {
-        return false;
-    }
+    return robot_nodes;
 }
 
-// 计算路径
-vector<Vec2> calPath(Node* start, Node* goal) {
+// A*计算路径
+vector<Vec2> calPath(Node* start, Node* goal, Robot* cur_robot) {
     vector<Node*> path;
     vector<Vec2> coor_path;
-    if (all_path.find({ start->id,goal->id }) != all_path.end()) {
+    // 携带物品先找是否记录过路径
+    if (all_path.find({ start->id,goal->id }) != all_path.end() && cur_robot != nullptr && cur_robot->getGoodsType() > 0) {
         path = all_path[{start->id, goal->id}];
         coor_path = AStar::getCoorPath(path);
     }
+    // 不携带物品或没有记录过
     else {
-        //DStar astar(start, goal, graph);
         AStar astar(start, goal);
-        path = astar.searching();
-        astar.smoothPath(path);
-        // 记录路径
-        all_path[{start->id, goal->id}] = path;
-        for (auto neigh : start->neighbors) {
-            all_path[{neigh->id, goal->id}] = path;
+        astar.cur_robot = cur_robot;
+        if(cur_robot != nullptr) {
+            unordered_set<Node*> robot_nodes = getOtherRobotNodes(cur_robot);
+            astar.robot_nodes = robot_nodes;
         }
+        path = astar.searching();
+        if (path.empty()) {
+            return {};
+        }
+        astar.smoothPath(path);
         coor_path = AStar::getCoorPath(path);
-        // 记录反向路径
-        reverse(path.begin(), path.end());
-        all_path[{ goal->id, start->id}] = path;
-        for (auto neigh : goal->neighbors) {
-            all_path[{neigh->id, start->id}] = path;
+        // 携带物品 记录路径
+        if((cur_robot != nullptr && cur_robot->getGoodsType() > 0) || cur_robot == nullptr) {
+            // 记录路径
+            all_path[{start->id, goal->id}] = path;
+            for (auto neigh : start->neighbors) {
+                all_path[{neigh->id, goal->id}] = path;
+            }
+            // 记录反向路径
+            reverse(path.begin(), path.end());
+            all_path[{ goal->id, start->id}] = path;
+            for (auto neigh : goal->neighbors) {
+                all_path[{neigh->id, start->id}] = path;
+            }
         }
     }
-    //coor_path = AStar::getCoorPath(path);
     return coor_path;
 }
 
-// 碰撞检测
-void checkCollision() {
-    /*for (auto robot : robots) {
+// 预测碰撞 控制速度
+void checkCollision3() {
+    int predict_step = 20;
+    for (auto robotI : robots) {
+        auto path_i = robotI->getPath();
+        if (path_i.empty()) continue;
+        for (auto robotJ : robots) {
+            if (robotI->getRobotId() == robotJ->getRobotId()) continue;
+            auto path_j = robotJ->getPath();
+            if (path_j.empty()) continue;
+            // 预测robotI的第n步是否会与robotJ的0-n步碰撞
+            /*for (int step = 0; step < predict_step; ++step) {
+                if (step < path_j.size()) {
+                    int robotI_step = predict_step < path_i.size() - 1 ? predict_step : path_i.size() - 1;
+                    double dis = distance(path_i[robotI_step], path_j[step]);
+                    if (dis < 2) {
+                        robotI->rotate(MAX_ROTATE_SPEED / 2);
+                        robotI->forward(1);
+                        return;
+                    }
+                }
+            }*/
+            // 预测robotI和robotJ的第n步是否相撞
+            if (predict_step < path_j.size() && predict_step < path_i.size()) {
+                double dis = distance(path_i[predict_step], path_j[predict_step]);
+                double now_dis = distance(path_i[0], path_j[0]);
+                if (dis < 2 && now_dis > 2) {
+                    robotI->rotate(MAX_ROTATE_SPEED / 2);
+                    robotI->forward(1);
+                    return;
+                }
+            }
+        }
+    }
+}
+
+// 回退或重新计算路径
+void checkCollision2() {
+    for (auto robot : robots) {
         robot->setIsCollision(0);
-    }*/
+    }
     for (int i = 0; i < ROBOT_SIZE; ++i) {
         auto& robotI = robots[i];
-        // 阻塞时长超过阈值
-        if (robotI->getCollisionFrame() > 100) {
+        // 阻塞时长超过阈值 回退到起点
+        if (robotI->getCollisionFrame() > 200 && robotI->getMoveStatus() == 0) {
             // 回退到起点
             Node* start = graph->coordinateToNode(robotI->getCoordinate());
             vector<Vec2> raw_path = robotI->getPath();
@@ -1128,7 +1167,7 @@ void checkCollision() {
             if (start->id == goal->id) {
                 continue;
             }
-            vector<Vec2> coor_path = calPath(start, goal);
+            vector<Vec2> coor_path = calPath(start, goal, robotI);
             robotI->setPath(coor_path);
             // 重置阻塞时长
             for (int j = 0; j < ROBOT_SIZE; ++j) {
@@ -1138,6 +1177,30 @@ void checkCollision() {
             robots[i]->setMoveStatus(1);
             return;
         }
+        
+        // 阻塞时长超过阈值 重新计算路径
+        
+        //if (robotI->getCollisionFrame() > 100 ) {
+        //    // A*
+        //    Node* start = graph->coordinateToNode(robotI->getCoordinate());
+        //    Node* goal = graph->workbenchToNode(robotI->getTargetBenchId());
+        //    vector<Vec2> coor_path = calPath(start, goal, robotI);
+        //    robotI->setPath(coor_path);
+        //    // RRT
+        //    /*Node* start = graph->coordinateToNode(robotI->getCoordinate());
+        //    Node* goal = graph->workbenchToNode(robotI->getWorkbenchId());
+        //    Rrt rrt(start, goal, graph);
+        //    rrt.setModel(1);
+        //    auto path = rrt.planning();
+        //    vector<Vec2> coor_path = calPath(start, goal, robotI);
+        //    robotI->setPath(coor_path);*/
+        //    // 重置阻塞时长
+        //    for (int j = 0; j < ROBOT_SIZE; ++j) {
+        //        robots[j]->setCollisionFrame(0);
+        //    }
+        //    return;
+        //}
+        
         for (int j = i + 1; j < ROBOT_SIZE; ++j) {
             auto& robotJ = robots[j];
             auto dis = robotI->calDistance(*robotJ);
@@ -1150,36 +1213,154 @@ void checkCollision() {
             if (dis <= r1 + r2 + 0.02 && PI / 2 <= dif && dif < PI * 3 / 2) {
                 robotI->addCollisionFrame();
                 robotJ->addCollisionFrame();
-                /*robotI->setIsCollision(1);
-                robotJ->setIsCollision(1);*/
+                robotI->setIsCollision(1);
+                robotJ->setIsCollision(1);
             }
         }
     }
     for (int i = 0; i < ROBOT_SIZE; ++i) {
         auto& robotI = robots[i];
         // 没有产生碰撞 重置阻塞时长
-        /*if (robotI->getIsCollision() == 0) {
+        if (robotI->getIsCollision() == 0) {
             robotI->setCollisionFrame(0);
-        }*/
-        // 运动状态为正常状态 
-        if (robotI->getMoveStatus() == 0) continue;
-        // 计算与其他机器人的距离是否大于阈值
-        int count = 0;
-        for (int j = 0; j < ROBOT_SIZE; ++j) {
-            if (i == j) continue;
-            if (robotI->calDistance(*robots[j]) > 3) {
-                count++;
+        }
+
+        //若与其他机器人距离都大于阈值则停止避让 回到原目标
+        
+        //// 运动状态为正常状态 
+        //if (robotI->getMoveStatus() == 0) continue;
+        //// 计算与其他机器人的距离是否大于阈值
+        //int count = 0;
+        //for (int j = 0; j < ROBOT_SIZE; ++j) {
+        //    if (i == j) continue;
+        //    if (robotI->calDistance(*robots[j]) > 3) {
+        //        count++;
+        //    }
+        //}
+        //// 与其他机器人距离都大于阈值 停止避让 回到原目标
+        //if (count == 3) {
+        //    Node* start = graph->coordinateToNode(robotI->getCoordinate());
+        //    Node* goal = graph->workbenchToNode(robotI->getWorkbenchId());
+        //    vector<Vec2> coor_path = calPath(start, goal);
+        //    robotI->setCollisionFrame(0);
+        //    robotI->setPath(coor_path);
+        //    robotI->setMoveStatus(0);
+        //}
+    }
+}
+
+// RRT算法避让
+void checkCollision() {
+    int predict_step = 5;
+    for (auto robotI : robots) {
+        unordered_set<Node*> robot_nodes = getOtherRobotNodes(robotI);
+        for (auto robotJ : robots) {
+            if (robotI->getRobotId() == robotJ->getRobotId()) continue;
+            // 预测未来n步是否可能会碰撞
+            auto path_i = robotI->getPath();
+            auto path_j = robotJ->getPath();
+            if (path_i.size() > predict_step && path_j.size() > predict_step) {
+                double dis = distance(path_i[predict_step], path_j[predict_step]);
+                double now_dis = distance(path_i[0], path_j[0]);
+                if (dis < 1.5 && now_dis > 2) {
+                    Node* start = graph->coordinateToNode(robotI->getCoordinate());
+                    Node* goal = graph->coordinateToNode(path_i[predict_step]);
+                    Rrt rrt(start, goal, graph, robot_nodes);
+                    vector<Node*> path = rrt.planning();
+                    if (path.empty()) continue;
+                    auto coor_path = AStar::getCoorPath(path);
+                    robotI->setPath(coor_path);
+                    robotI->move();
+                    return;
+                }
+            }
+            // 已经发生碰撞
+            else if (distance(robotI->getCoordinate(), robotJ->getCoordinate()) < 1.1 ) {
+                Node* start = graph->coordinateToNode(robotI->getCoordinate());
+                Node* goal = graph->coordinateToNode(robotJ->getCoordinate());
+                Rrt rrt(start, goal, graph, robot_nodes);
+                vector<Node*> path = rrt.planning();
+                // RRT计算失败 回到起点
+                if (path.empty()) {
+                    Node* start = graph->coordinateToNode(robotI->getCoordinate());
+                    vector<Vec2> raw_path = robotI->getPath();
+                    Node* goal = graph->coordinateToNode(robotI->getStartCoor());
+                    if (start->id == goal->id) {
+                        continue;
+                    }
+                    vector<Vec2> coor_path = calPath(start, goal, robotI);
+                    robotI->setPath(coor_path);
+                    return;
+                }
+                auto coor_path = AStar::getCoorPath(path);
+                robotI->setPath(coor_path);
+                robotI->move();
+                return;
             }
         }
-        // 与其他机器人距离都大于阈值 停止避让 回到原目标
-        if (count == 3) {
-            Node* start = graph->coordinateToNode(robotI->getCoordinate());
-            Node* goal = graph->workbenchToNode(robotI->getWorkbenchId());
-            vector<Vec2> coor_path = calPath(start, goal);
-            robotI->setCollisionFrame(0);
-            robotI->setPath(coor_path);
-            robotI->setMoveStatus(0);
+    }
+}
+
+// 检测静止时间是否超过阈值
+void checkStatic() {
+    ++frame_count;
+    if (frame_count > 100) {
+        frame_count = 0;
+        for (auto robot : robots) {
+            //if (robot->getRobotId() == 3) continue;
+            if (distance(robot->getCoordinate(), robot->getOldCoordinate()) < 0.25) {
+                //robot->reset();
+                robot->setPath({});
+                robot->setBlockStatus(1);
+            }
+            else {
+                robot->setOldCoordinate(robot->getCoordinate());
+                robot->setBlockStatus(0);
+            }
         }
+    }
+}
+
+// 比较当前路径需要的总时间与剩余时间
+bool compareTime(const int& robotId, const int& buy_bench_id) {
+    int sell_bench_id = robots[robotId]->getSellBenchId();
+    if (buy_bench_id == -1 || sell_bench_id == -1) return false;
+
+    double offset = 1.2;
+    // 计算到买入工作台的时间
+    Vec2 start_coor = robots[robotId]->getCoordinate();
+    Node* start = graph->coordinateToNode(start_coor);
+    Node* goal = graph->workbenchToNode(buy_bench_id);
+    vector<Vec2> coor_path = calPath(start, goal, robots[robotId]);
+    robots[robotId]->setPath(coor_path);
+    double buy_distance = coor_path.size() * 1.0;
+    double buy_time = buy_distance / MAX_FORWARD_SPEED * offset;
+    // 从买入工作台到卖出工作台的时间
+    double sell_distance;
+    int buy_node = graph->workbenchToNode(buy_bench_id)->id;
+    int sell_node = graph->workbenchToNode(sell_bench_id)->id;
+    if (all_path.find({ buy_node, sell_node }) != all_path.end()) {
+        sell_distance = all_path[{ buy_node, sell_node }].size() * 1.0;
+    }
+    else {
+        sell_distance = workbenchs[buy_bench_id]->calDistance(*workbenchs[sell_bench_id]);
+    }
+    double sell_time = sell_distance / MAX_FORWARD_SPEED * offset;
+
+    //// 计算到买入工作台的时间
+    //double buy_distance = robots[robotId]->calDistance(*workbenchs[buy_bench_id]);
+    //double buy_time = buy_distance / MAX_FORWARD_SPEED * offset;
+    //// 从买入工作台到卖出工作台的时间
+    //double sell_distance = workbenchs[buy_bench_id]->calDistance(*workbenchs[sell_bench_id]);
+    //double sell_time = sell_distance / MAX_FORWARD_SPEED * offset;
+
+    int rest_frame = TOTAL_FRAME - frame_id;
+    // 剩余时间不足
+    if (buy_time + sell_time > rest_frame / static_cast<double>(FPS)) {
+        return true;
+    }
+    else {
+        return false;
     }
 }
 
@@ -1255,6 +1436,10 @@ void action_old() {
 }
 void action() {
     for (auto& robot : robots) {
+        if (robot->getBlockStatus() == 1) {
+            robot->move();
+            continue;
+        }
         int target_bench = robot->getTargetBenchId();
         // 计算目标
         if (target_bench == -1) {
@@ -1263,24 +1448,23 @@ void action() {
                 target_bench = unitProfitFirst(robot->getRobotId());
 
                 // 剩余时间不足以买4567并卖掉
-                /*if (compareTime(robotId, target_bench)) {
-                    target_bench = unitProfitFirst(robotId, true);
-                    if (compareTime(robotId, target_bench)) {
+                /*if (compareTime(robot->getRobotId(), target_bench)) {
+                    target_bench = unitProfitFirst(robot->getRobotId(), true);
+                    if (compareTime(robot->getRobotId(), target_bench)) {
                         target_bench = -1;
                     }
                 }*/
             }
             // 卖出
             else {
-                target_bench = robot->getSellBenchId();
                 // 回到买入时指定的工作台
-                //if (robot->getSellBenchId() != -1) {
-                //    target_bench = robot->getSellBenchId();
-                //}
-                //// 没有指定
-                //else {
-                //    target_bench = findSellBench(robot->getRobotId());
-                //}
+                if (robot->getSellBenchId() != -1) {
+                    target_bench = robot->getSellBenchId();
+                }
+                // 没有指定
+                else {
+                    target_bench = findSellBench(robot->getRobotId());
+                }
             }
             if (target_bench == -1) {
                 continue;
@@ -1299,18 +1483,25 @@ void action() {
                 start = graph->workbenchToNode(robot->getWorkbenchId());
             }
             Node* goal = graph->workbenchToNode(target_bench);
-            vector<Vec2> coor_path = calPath(start, goal);
+            vector<Vec2> coor_path = calPath(start, goal,robot);
             robot->setPath(coor_path);
         }
         robot->move();
         //robot->checkCollision(robots);
-        
     }
+    checkCollision3();
     checkCollision();
+    //checkCollision2();
+    checkStatic();
+}
+
+void updateGraph() {
+    vector<Vec2> robots_coor = { robots[0]->getCoordinate() ,robots[1]->getCoordinate() ,robots[2]->getCoordinate() ,robots[3]->getCoordinate() };
+    graph->updateObstacle(robots_coor);
 }
 
 // 读取每帧数据
-bool readFrame() {
+void readFrame() {
     char line[1024];
     int index = 0;
     int robotId = 0;
@@ -1321,7 +1512,7 @@ bool readFrame() {
     fgets(line, sizeof line, stdin); // 吸收掉一个换行符
     while (fgets(line, sizeof line, stdin)) {
         if (line[0] == 'O' && line[1] == 'K') {
-            return true;
+            return ;
         }
         std::stringstream ss(line);
         if (index < workbench_num) {
@@ -1350,7 +1541,7 @@ bool readFrame() {
         }
         ++index;
     }
-    return false;
+    return ;
 }
 
 // 读取地图数据
@@ -1464,7 +1655,7 @@ void judgeMap() {
     }
 }
 
-// 初始化买工作台到卖工作台的路径
+// 初始化部分买工作台到卖工作台的路径
 void initPath() {
 #ifdef _WIN32
     clock_t start_time, end_time;
@@ -1484,7 +1675,7 @@ void initPath() {
                 continue;
             }
             Node* goal = graph->workbenchToNode(sell_bench->getWorkbenchId());
-            calPath(start, goal);
+            calPath(start, goal, nullptr);
         }
 #ifdef _WIN32
         end_time = clock();
@@ -1535,6 +1726,17 @@ void initUnreachable() {
     }
 }
 
+// 记录除自己以外的机器人
+void initOtherRobots() {
+    for (auto robot : robots) {
+        for (auto other_robot : robots) {
+            if (robot->getRobotId() != other_robot->getRobotId()) {
+                robot->addOtherRobots(other_robot);
+            }
+        }
+    }
+}
+
 // 初始化
 void init() {
     readMap();
@@ -1542,6 +1744,7 @@ void init() {
     judgeMap();
     initUnreachable();
     initPath();
+    initOtherRobots();
     puts("OK");
     fflush(stdout);
 }
@@ -1553,7 +1756,6 @@ int main() {
     while (scanf("%d %d", &frame_id, &money) != EOF) {
         scanf("%d", &workbench_num);
         readFrame();
-
         // 输出控制指令
         printf("%d\n", frame_id);
 

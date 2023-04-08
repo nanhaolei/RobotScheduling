@@ -1,6 +1,4 @@
 #include "dstar.h"
-#include <iostream>
-#include <cassert>
 
 DStar::DStar(Node* start_, Node* goal_, Graph* graph_) : start(start_), goal(goal_),graph(graph_) {
 	rhs[goal] = 0.0;

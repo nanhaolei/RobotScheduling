@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <vector>
 #include <cassert>
+#include <random>
 using namespace std;
 using namespace geometry;
 
@@ -65,7 +66,13 @@ public:
 	bool isReachable(int workbench_id);
 	// Åö×²¼ì²â
 	void checkCollision(vector<Robot*> robots);
-	
+	// ¼ÇÂ¼Åö×²Ê±³¤
+	void addCollisionFrame();
+	// ¼ì²âÂ·¾¶Îª¿Õ
+	bool checkPath();
+	// ¼ì²â¾²Ö¹
+	void checkStatic();
+	void reset();
 private:
 	int robotId;
 	int workbenchId;
@@ -73,7 +80,7 @@ private:
 	double timeCoefficient;
 	double collisionCoefficient;
 	double angleSpeed;
-	double lineSpeed[2];
+	Vec2 lineSpeed;
 	double direction;
 	//double coordinate[2];
 	int targetBenchId;
@@ -91,24 +98,26 @@ private:
 	int collisionFrame;
 	int isCollision;
 	int moveStatus;
+	int staticFrame;
+	unordered_set<Robot*> otherRobots;
+	Vec2 blockCoor;
+	int blockStatus;
+	Vec2 oldCoor;
 
 public:
 	Robot(int _robotId);
-
+	void setOldCoordinate(Vec2 oldCoordinate) { this->oldCoor = oldCoordinate; }
+	Vec2 getOldCoordinate() { return oldCoor; }
+	void addOtherRobots(Robot* otherRobot) { otherRobots.insert(otherRobot); }
+	int getBlockStatus() { return blockStatus; }
+	void setBlockStatus(int status) { blockStatus = status; }
 	int getMoveStatus() { return moveStatus; }
 	void setMoveStatus(int status) { moveStatus = status; }
 	int getIsCollision() { return isCollision; }
 	void setIsCollision(int is) { isCollision = is; }
-	void addCollisionFrame() {
-		/*if (this->goodsType == 0)
-			collisionFrame += 2;
-		else
-			collisionFrame += 1;*/
-		collisionFrame += 2;
-	}
 	int getCollisionFrame() { return collisionFrame; }
 	void setCollisionFrame(int frame) { collisionFrame = frame; }
-	Vec2 getCoordinate() { return Vec2{ coordinate[0], coordinate[1] }; }
+	Vec2 getCoordinate() { return coordinate; }
 	void setPath(vector<Vec2> path) {
 		this->path = path;
 		if(path.size() > 0) {

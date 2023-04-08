@@ -518,19 +518,66 @@ void Robot::CalcForwardSpeedAndRotateSpeed(const Vec2& target, int& lineSpeed, d
 			angleSpeed = maxRotateSpeed * sin(absAngle);    // 旋转速度随角度变小而变小
 		}
 	}
-	double distance = calDistance(*targetBench);
-	// 在目标工作台附近减速
-	if (distance < JUDGE_DISTANCE * 3) {
-		lineSpeed = 1;
+	if (targetBench != nullptr) {
+		double distance = calDistance(*targetBench);
+		// 在目标工作台附近减速
+		if (distance < JUDGE_DISTANCE * 3) {
+			lineSpeed = 1;
+		}
 	}
 	// 在墙边减速
 	if (isBesideBoundary() && absAngle > PI / 3) {
 		lineSpeed = 0;
 	}
+	// 预测未来n步是否可能会碰撞
+	//for (auto other_robot : otherRobots) {
+	//	auto path_i = this->getPath();
+	//	auto path_j = other_robot->getPath();
+	//	int predict_step = 5;
+	//	if (path_i.size() > predict_step && path_j.size() > predict_step) {
+	//		double dis = distance(path_i[predict_step], path_j[predict_step]);
+	//		double now_dis = distance(path_i[0], path_j[0]);
+	//		if (dis < 1.5 && now_dis > 2) {
+	//			if (this->coordinate[0] < other_robot->getCoordinateX()) {
+	//				if (this->direction > 0) {
+	//					angleSpeed = MAX_ROTATE_SPEED / 4.5;
+	//					//this->rotate(MAX_ROTATE_SPEED / 4.5);
+	//				}
+	//				else {
+	//					angleSpeed = -MAX_ROTATE_SPEED / 4.5;
+	//					//this->rotate(-MAX_ROTATE_SPEED / 4.5);
+	//				}
+	//			}
+	//			else {
+	//				if (this->direction > 0) {
+	//					angleSpeed = -MAX_ROTATE_SPEED / 4.5;
+	//					//this->rotate(-MAX_ROTATE_SPEED / 4.5);
+	//				}
+	//				else {
+	//					angleSpeed = MAX_ROTATE_SPEED / 4.5;
+	//					//this->rotate(MAX_ROTATE_SPEED / 4.5);
+	//				}
+	//			}
+	//			//angleSpeed = MAX_ROTATE_SPEED / 2;
+	//		}
+	//	}
+	//}
 }
 
 void Robot::move() {
-	assert(path.size() > 0);
+	//assert(path.size() > 0);
+	//checkStatic();
+	//if (!checkPath()) return;
+	if (path.empty()) {
+		this->forward(-2);
+		this->rotate(((rand() & 1) ? 1 : -1) * PI / 8);
+		return;
+	}
+	if (this->blockStatus == 1) {
+		this->forward(-2);
+		this->rotate(((rand() & 1) ? 1 : -1)* PI / 8);
+		return;
+	}
 	if (this->path.size() > 1 && isReachNode()) {
 		this->path.erase(this->path.begin());
 	}
@@ -544,14 +591,15 @@ void Robot::move() {
 	}
 
 	// 已到达目标工作台
-	if (this->workbenchId == this->targetBenchId) {
+	if (this->workbenchId == this->targetBenchId && this->targetBenchId != -1) {
 		// 买
 		if (this->goodsType == 0) {
 			// 产品还没生产好则等待
 			if (targetBench->getProductStatus() == 1) {
 				this->buy();
-				this->targetBenchId = -1;
 				targetBench->setProductStatus(0);
+				this->targetBenchId = -1;
+				this->targetBench = nullptr;
 				this->path.clear();
 			}
 		}
@@ -560,27 +608,21 @@ void Robot::move() {
 			// 材料格还没空出来则等待
 			if (!targetBench->getHoldMaterial(this->goodsType)) {
 				this->sell();
-				this->targetBenchId = -1;
-				this->sellBenchId = -1;
 				targetBench->setReservedMaterial(this->goodsType, false);
 				targetBench->setHoldMaterial(this->goodsType, true);
+				this->targetBenchId = -1;
+				this->targetBench = nullptr;
+				this->sellBenchId = -1;
 				this->path.clear();
 			}
 		}
 	}
 	// 到达回退终点
 	else if (isEq(this->coordinate, this->goalCoor)) {
+		this->moveStatus = 0;
 		this->path.clear();
 	}
-	// 无路径且不位于工作台上
-	/*else if (this->path.empty()) {
-		this->targetBenchId = -1;
-		if (this->targetBench != nullptr && this->goodsType > 0) {
-			targetBench->setReservedMaterial(this->goodsType, true);
-			this->targetBench = nullptr;
-		}
-		this->sellBenchId = -1;
-	}*/
+	
 }
 
 bool Robot::isReachNode() {
@@ -602,6 +644,61 @@ bool Robot::isReachable(int workbench_id) {
 	else {
 		return true;
 	}
+}
+
+void Robot::addCollisionFrame() {
+	/*if (this->goodsType == 0)
+		collisionFrame += 2;
+	else
+		collisionFrame += 1;*/
+	collisionFrame += 2;
+}
+
+bool Robot::checkPath() {
+	// 无路径
+	if (this->path.empty() && this->blockStatus == 0) {
+		cerr << "err:move" << endl;
+		this->blockStatus = 1;
+		this->blockCoor = this->coordinate;
+		//reset();
+	}
+	if (distance(this->blockCoor, this->coordinate) < 1 && this->blockStatus == 1) {
+		this->forward(-2);
+		this->rotate(PI / 8);
+		return false;
+	}
+	else {
+		this->blockStatus = 0;
+		this->blockCoor = { 0, 0 };
+		return true;
+	}
+}
+
+void Robot::checkStatic() {
+	if (length(this->lineSpeed) < 0.1 || this->angleSpeed < 0.08) {
+		++this->staticFrame;
+	}
+	if (length(this->lineSpeed) > 1 || this->angleSpeed > 0) {
+		this->staticFrame = 0;
+	}
+	if (staticFrame > 50 && this->blockStatus == 0) {
+		cerr << "err:static" << endl;
+		this->blockStatus = 1;
+		this->blockCoor = this->coordinate;
+		reset();
+		/*this->forward(-2);
+		this->rotate(MAX_ROTATE_SPEED / 2);*/
+	}
+}
+
+void Robot::reset() {
+	this->targetBenchId = -1;
+	if (this->targetBench != nullptr) {
+		targetBench->setReservedMaterial(this->goodsType, false);
+		this->targetBench = nullptr;
+	}
+	this->sellBenchId = -1;
+	this->path.clear();
 }
 
 // 令count循环
@@ -657,5 +754,9 @@ Robot::Robot(int _robotId): robotId(_robotId) {
 	collisionFrame = 0;
 	isCollision = 0;
 	moveStatus = 0;
+	staticFrame = 0;
+	blockCoor = { 0,0 };
+	blockStatus = 0;
+	oldCoor = { 0,0 };
 };
 

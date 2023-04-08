@@ -131,15 +131,48 @@ Node* Graph::workbenchToNode(int workbench_id) {
 }
 
 Node* Graph::coordinateToNode(Vec2 coordinate) {
+	double min_dist = DBL_MAX;
+	Node* cur_node = nullptr;
 	for (auto node : nodes) {
-		if (abs(node->coordinate[0] - coordinate[0]) < GRID_LENGTH / 2 && abs(node->coordinate[1] - coordinate[1]) < GRID_LENGTH / 2) {
+		double dx = node->coordinate[0] - coordinate[0];
+		double dy = node->coordinate[1] - coordinate[1];
+		double dist = sqrt(dx * dx + dy * dy);
+		if (dist < min_dist) {
+			min_dist = dist;
+			cur_node = node;
+		}
+		if (abs(dx) < GRID_LENGTH / 2 + EPSILON  && abs(dy) < GRID_LENGTH / 2 + EPSILON) {
 			return node;
 		}
 	}
 	cerr << "err:coordinateToNode" << endl;
-	return nullptr;
+	return cur_node;
+	//return nullptr;
 }
 
 Node* Graph::indexToNode(array<int, 2> index) {
 	return index_to_node[index];
+}
+
+Node* Graph::robotToNode(Robot* robot) {
+	Vec2 coor = robot->getCoordinate();
+	return coordinateToNode(coor);
+}
+
+void Graph::updateObstacle(vector<Vec2> robots_coor) {
+	if(robotNodes.size() > 0) {
+		for (auto node : robotNodes) {
+			node->is_obstacle = false;
+		}
+		robotNodes.clear();
+	}
+	for (auto coor : robots_coor) {
+		Node* cur_node = coordinateToNode(coor);
+		cur_node->is_obstacle = true;
+		robotNodes.emplace_back(cur_node);
+		/*for (auto neigh : node->neighbors) {
+			neigh->is_obstacle = true;
+			robotNodes.emplace_back(neigh);
+		}*/
+	}
 }
