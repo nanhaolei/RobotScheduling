@@ -25,7 +25,7 @@ vector<Node*> AStar::searching() {
 				continue;
 			if (neighbor->is_obstacle && *neighbor!=*start)
 				continue;*/
-			if (neighbor->is_obstacle || obstacle_robot_nodes.find(neighbor)!=obstacle_robot_nodes.end()) 
+			if (neighbor->is_obstacle || obstacle_robot_nodes.find(neighbor) != obstacle_robot_nodes.end()) 
 				continue;
 			//if (neighbor->is_obstacle) continue;
 			double new_cost = g[cur_node] + cost(cur_node, neighbor);

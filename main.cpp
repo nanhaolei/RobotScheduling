@@ -1126,12 +1126,12 @@ vector<Vec2> calPath(Node* start, Node* goal, Robot* cur_robot) {
 void checkCollision3() {
     int predict_step = 15;
     for (auto robotI : robots) {
-        //if (robotI->getWaitStatus() == 1) continue; // 机器人I已处于退避状态 不检测
+        //if (robotI->getBackStatus() == 1) continue; // 机器人I已处于退避状态 不检测
         auto path_i = robotI->getPath();
         if (path_i.empty()) continue;
         for (auto robotJ : robots) {
             if (robotI->getRobotId() == robotJ->getRobotId()) continue;
-            //if (robotJ->getWaitStatus() == 1) continue; // 机器人J已处于退避状态 不检测
+            if (robotJ->getBackStatus() == 1) continue; // 机器人J已处于退避状态 不检测
             auto path_j = robotJ->getPath();
             if (path_j.empty()) continue;
             // 预测robotI的第n步是否会与robotJ的0-n步碰撞
@@ -1144,7 +1144,7 @@ void checkCollision3() {
                         //robotI->forward(-2);
                         robotI->forward(-1);
                         robotI->rotate(((rand() & 1) ? 1 : -1) * PI / 2);
-                        //robotI->setWaitStatus(1);
+                        robotI->setBackStatus(1);
                         return;
                     }
                 }
@@ -1161,7 +1161,7 @@ void checkCollision3() {
                 }
             }*/
         }
-        //robotI->setWaitStatus(0);
+        robotI->setBackStatus(0);
     }
 }
 
@@ -1269,9 +1269,10 @@ void checkCollision() {
     int predict_step = 5;
     for (auto robotI : robots) {
         unordered_set<Node*> obstacle_robot_nodes = getOtherRobotNodes(robotI);
-        //if (robotI->getWaitStatus() == 1) continue; // 机器人I已处于退避状态 不检测
+        //if (robotI->getBackStatus() == 1) continue; // 机器人I已处于退避状态 不检测
         for (auto robotJ : robots) {
             if (robotI->getRobotId() == robotJ->getRobotId()) continue;
+            if (robotJ->getBackStatus() == 1) continue; // 机器人J已处于退避状态 不检测
             // 预测未来n步是否可能会碰撞
             auto path_i = robotI->getPath();
             auto path_j = robotJ->getPath();
@@ -1287,7 +1288,7 @@ void checkCollision() {
                     auto coor_path = AStar::getCoorPath(path);
                     robotI->setPath(coor_path);
                     robotI->move();
-                    //robotI->setWaitStatus(1);
+                    robotI->setBackStatus(1);
                     return;
                 }
             }
@@ -1314,30 +1315,29 @@ void checkCollision() {
                 auto coor_path = AStar::getCoorPath(path);
                 robotI->setPath(coor_path);
                 robotI->move();
-                //robotI->setWaitStatus(1);
+                //robotI->setBackStatus(1);
                 return;
             }
         }
-        //robotI->setWaitStatus(0);
+        robotI->setBackStatus(0);
     }
 }
 
 // 检测静止时间是否超过阈值
 void checkStatic() {
     ++frame_count;
-    if (frame_count > 50) {
+    if (frame_count > 80) {
         frame_count = 0;
         for (auto robot : robots) {
-            //if (robot->getRobotId() == 3) continue;
             if (distance(robot->getCoordinate(), robot->getOldCoordinate()) < 0.25) {
                 //robot->reset();
                 robot->setPath({});
                 robot->setBlockStatus(1);
             }
             else {
-                robot->setOldCoordinate(robot->getCoordinate());
                 robot->setBlockStatus(0);
             }
+            robot->setOldCoordinate(robot->getCoordinate());
         }
     }
 }
@@ -1768,7 +1768,7 @@ void action_old() {
                     target_bench = unitProfitFirst(robotId);
                 }
 
-                // 剩余时间不足以买4567并卖掉
+                // 剩余时间不足以买入并卖掉
                 if (compareTime(robotId, target_bench)) {
                     target_bench = unitProfitFirst(robotId, true);
                     if (compareTime(robotId, target_bench)) {
@@ -1803,10 +1803,9 @@ void action() {
                 continue;
             }
         }
-        if (cur_map == 2) {
+        /*if (cur_map == 2) {
             break;
-        }
-
+        }*/
 
         if (robot->getBlockStatus() == 1) {
             robot->move();
@@ -1814,18 +1813,19 @@ void action() {
         }
         int target_bench = robot->getTargetBenchId();
         // 计算目标
-        if (target_bench == -1) {
+        if (target_bench == -1 && robot->getStop() == 0) {
             // 买入
-            if (robot->getGoodsType() == 0) {
+            if (robot->getGoodsType() == 0 ) {
                 target_bench = unitProfitFirst(robot->getRobotId());
 
-                // 剩余时间不足以买4567并卖掉
-                /*if (compareTime(robot->getRobotId(), target_bench)) {
+                // 剩余时间不足以买入并卖掉
+                if (compareTime(robot->getRobotId(), target_bench)) {
                     target_bench = unitProfitFirst(robot->getRobotId(), true);
                     if (compareTime(robot->getRobotId(), target_bench)) {
                         target_bench = -1;
+                        robot->setStop(1);
                     }
-                }*/
+                }
             }
             // 卖出
             else {

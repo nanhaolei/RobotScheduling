@@ -101,9 +101,12 @@ private:
 	int blockStatus;
 	Vec2 oldCoor;
 	int backStatus;
+	bool stop;
 
 public:
 	Robot(int _robotId);
+	int getStop() { return stop; }
+	void setStop(int status) { stop = status; }
 	int getBackStatus() { return backStatus; }
 	void setBackStatus(int status) { backStatus = status; }
 	void setOldCoordinate(Vec2 oldCoordinate) { this->oldCoor = oldCoordinate; }

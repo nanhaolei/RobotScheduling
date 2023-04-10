@@ -487,7 +487,6 @@ void Robot::move() {
 	if (this->blockStatus == 1) {
 		this->forward(-1);
 		this->rotate(((rand() & 1) ? 1 : -1)* PI / 4);
-		//this->rotate(PI / 2);
 		return;
 	}
 	if (this->path.empty()) {
@@ -680,5 +679,6 @@ Robot::Robot(int _robotId): robotId(_robotId) {
 	blockStatus = 0;
 	oldCoor = { 0,0 };
 	backStatus = 0;
+	stop = 0;
 };
 
