@@ -15,8 +15,6 @@ double Workbench::calDistance(const Workbench& workbench) {
 
 // ·µ»ØÈ±Ê§µÄ²ÄÁÏ
 int Workbench::getLostMaterial() {
-	//int bench_type = workbenchs[workbenchId].getType();
-	//int material = workbenchs[workbenchId].getMaterialStatus();
 	int bench_type = this->type;
 	int material = this->materialStatus;
 	int goods_type = -1;

@@ -13,7 +13,7 @@ vector<Node*> AStar::searching() {
 	g[start] = 0;
 	g[goal] = INT_MAX;
 	open.push(start);
-	while (!open.empty() && iter < iter_max) {
+	while (!open.empty() /*&& iter < iter_max*/) {
 		++iter;
 		Node* cur_node = open.top();
 		open.pop();
@@ -25,9 +25,9 @@ vector<Node*> AStar::searching() {
 				continue;
 			if (neighbor->is_obstacle && *neighbor!=*start)
 				continue;*/
-			if (neighbor->is_obstacle || robot_nodes.find(neighbor)!=robot_nodes.end()) 
+			if (neighbor->is_obstacle || obstacle_robot_nodes.find(neighbor)!=obstacle_robot_nodes.end()) 
 				continue;
-			/*if (neighbor->is_obstacle) continue;*/
+			//if (neighbor->is_obstacle) continue;
 			double new_cost = g[cur_node] + cost(cur_node, neighbor);
 			if (g.find(neighbor) == g.end() || new_cost < g[neighbor]) {
 				g[neighbor] = new_cost;
@@ -99,7 +99,7 @@ double AStar::heuristic(Node* cur_node) {
 }
 
 double AStar::f(Node* cur_node) {
-	return g[cur_node] + heuristic(cur_node);
+	return g[cur_node] + e * heuristic(cur_node);
 }
 
 int AStar::isBesideObstacle(Node* node) {
@@ -111,23 +111,23 @@ int AStar::isBesideObstacle(Node* node) {
 	// 携带物品
 	if ((cur_robot != nullptr && cur_robot->getGoodsType() > 0) || cur_robot == nullptr) {
 		// 节点上下左右有障碍
-		if (neighbors[0]->is_obstacle || neighbors[1]->is_obstacle || neighbors[2]->is_obstacle || neighbors[3]->is_obstacle) {
-			return 10000;
+		for (int i = 0; i < 4; ++i) {
+			if (neighbors[i]->is_obstacle)
+				return 10000;
 		}
 		// 节点斜向有障碍
-		else if (neighbors[4]->is_obstacle || neighbors[5]->is_obstacle || neighbors[6]->is_obstacle || neighbors[7]->is_obstacle) {
-			return 1000;
+		for (int i = 4; i < 8; ++i) {
+			if (neighbors[i]->is_obstacle)
+				return 1000;
 		}
 		// 节点周围障碍物越多 惩罚越大
-		int coff = 1;
-		/*for (auto nei : neighbors) {
-			for (auto nei_nei : nei->neighbors) {
-				if (nei_nei->is_obstacle) {
-					++coff;
-				}
+		int coeffcient = 1;
+		for (auto neigh : neighbors) {
+			if (neigh->is_obstacle) {
+				++coeffcient;
 			}
-		}*/
-		return coff;
+		}
+		return coeffcient;
 	}
 	// 不携带物品
 	else {
@@ -142,15 +142,13 @@ int AStar::isBesideObstacle(Node* node) {
 		else if (count == 1)
 			return 4;
 		// 节点周围障碍物越多 惩罚越大
-		/*int coff = 1;
-		for (auto nei : neighbors) {
-			for (auto nei_nei : nei->neighbors) {
-				if (nei_nei->is_obstacle) {
-					++coff;
-				}
+		int coeffcient = 1;
+		for (auto neigh : neighbors) {
+			if (neigh->is_obstacle) {
+				++coeffcient;
 			}
 		}
-		return coff;*/
+		return coeffcient;
 	}
 	return 1;
 }

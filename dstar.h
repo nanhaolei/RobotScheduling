@@ -32,9 +32,9 @@ public:
 	static vector<Vec2> getCoorPath(const vector<Node*>& path);
 	void smoothPath(vector<Node*>& path);
 
-	vector<double> CalculateKey(Node* s);
-	pair<Node*, vector<double>> TopKey();
-	void UpdateVertex(Node* s);
+	vector<double> calculateKey(Node* s);
+	pair<Node*, vector<double>> topKey();
+	void updateVertex(Node* s);
 };
 
 #endif

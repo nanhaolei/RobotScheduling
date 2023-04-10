@@ -27,21 +27,21 @@ private:
 		}
 	};
 	priority_queue <Node*, vector<Node*>, f_compare> open;
+	double e = 2.5;
 	
 public:
 	AStar(Node* start_, Node* goal_) : start(start_), goal(goal_) {};
-	AStar(Node* start_, Node* goal_, unordered_set<Node*> robot_nodes_, Robot* cur_robot_) : 
-		start(start_), goal(goal_), robot_nodes(robot_nodes_),cur_robot(cur_robot_) {};
-	double cost(Node* cur_node, Node* neigh_node);
-	double heuristic(Node* cur_node);
-	double f(Node* cur_node);
 	vector<Node*> searching();
 	vector<Node*> extractPath();
 	void smoothPath(vector<Node*>& path);
+	double cost(Node* cur_node, Node* neigh_node);
+	double heuristic(Node* cur_node);
+	double f(Node* cur_node);
 	int isBesideObstacle(Node* node);
 	static vector<Vec2> getCoorPath(const vector<Node*>& path);
-	unordered_set<Node*> robot_nodes;
-	Robot* cur_robot;
+
+	unordered_set<Node*> obstacle_robot_nodes;
+	Robot* cur_robot = nullptr;
 };
 
 #endif

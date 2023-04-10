@@ -25,6 +25,8 @@ double Robot::calDistance(const Robot& robot) {
 	return distance;
 }
 
+/*-----  初赛  -----*/
+
 // 计算两个向量之间的夹角（单位为弧度）
 double Robot::angleBetween(double dx1, double dy1, double dx2, double dy2) {
 	double len1 = sqrt(dx1 * dx1 + dy1 * dy1);
@@ -107,10 +109,10 @@ void Robot::calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSp
 	}
 
 	// 计算运动速度
-	double distance = calDistance(workbench);
+	double distance = this->calDistance(workbench);
 	double cur_speed = sqrt(this->lineSpeed[0] * this->lineSpeed[0] + this->lineSpeed[1] * this->lineSpeed[1]); 
 	double angleToTarget;
-	angleSpeed = calAngleSpeed(workbench, angleToTarget);
+	angleSpeed = this->calAngleSpeed(workbench, angleToTarget);
 	lineSpeed = MAX_FORWARD_SPEED;
 
 	// 在目标工作台附近
@@ -125,17 +127,17 @@ void Robot::calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSp
 	}*/
 
 	if (cur_map == 0) {
-		if (abs(angleToTarget) > PI / 3) {
+		/*if (abs(angleToTarget) > PI / 3) {
+			lineSpeed = 0;
+		}*/
+		// 在墙边 且转弯角度大于60
+		if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
 			lineSpeed = 0;
 		}
-		//// 在墙边 且转弯角度大于60
-		//if (isBesideBoundary() && abs(angleToTarget) > PI / 3) {
-		//	lineSpeed = 0;
-		//}
-		//// 不在墙边 转弯角度大于90
-		//if (abs(angleToTarget) > PI / 2) {
-		//	lineSpeed = 0;
-		//}
+		// 不在墙边 转弯角度大于90
+		if (abs(angleToTarget) > PI / 2) {
+			lineSpeed = 0;
+		}
 	}
 
 	// 图2特化
@@ -169,7 +171,7 @@ void Robot::calSpeed(const Workbench& workbench, int& lineSpeed, double& angleSp
 void Robot::move_old(Workbench& workbench, int cur_map) {
 	int lineSpeed = 0;
 	double angleSpeed = 0;
-	calSpeed(workbench, lineSpeed, angleSpeed, cur_map);
+	this->calSpeed(workbench, lineSpeed, angleSpeed, cur_map);
 	this->forward(lineSpeed);
 	this->rotate(angleSpeed);
 
@@ -267,38 +269,6 @@ void Robot::checkCollision_old(vector<Robot*> robots, int cur_map) {
 					}
 				}
 
-				/*if (cross > 0) {
-					this->rotate(-offset_angle);
-				}
-				else {
-					this->rotate(offset_angle);
-				}
-				if (PI / 2  <= dif && dif < PI) {
-					this->rotate(-offset_angle);
-				}
-				else if (PI <= dif && dif <= PI * 3 / 2 ) {
-					this->rotate(offset_angle);
-				}*/
-
-				/*if (cross > 0) {
-					if(PI /2 <=dif && dif <= PI)
-					{
-						this->rotate(-offset_angle);
-					}
-					else if(dif <= PI  && dif <= PI * 3/2) {
-						this->rotate(offset_angle);
-					}
-				}
-				else {
-					if (PI  <= dif && dif <= PI * 3/2)
-					{
-						this->rotate(offset_angle);
-					}
-					else if(PI / 2 <= dif && dif <= PI) {
-						this->rotate(-offset_angle);
-					}
-				}*/
-
 				// 距离非常接近减速
 				// TODO：范围调大一点
 				if (distance < spped_check_distance) {
@@ -329,8 +299,9 @@ void Robot::checkCollision_old(vector<Robot*> robots, int cur_map) {
 	}
 }
 
+/*-----  复赛  -----*/
 
-
+// 碰撞检测
 void Robot::checkCollision(vector<Robot*> robots) {
 	double offset_angle = PI;
 	double cur_dirction[2]{ cos(this->getDirection()),sin(this->getDirection()) };
@@ -378,38 +349,6 @@ void Robot::checkCollision(vector<Robot*> robots) {
 						this->rotate(offset_angle);
 					}
 				}
-
-				/*if (cross > 0) {
-					this->rotate(-offset_angle);
-				}
-				else {
-					this->rotate(offset_angle);
-				}
-				if (PI / 2  <= dif && dif < PI) {
-					this->rotate(-offset_angle);
-				}
-				else if (PI <= dif && dif <= PI * 3 / 2 ) {
-					this->rotate(offset_angle);
-				}*/
-				/*if (cross > 0) {
-					if(PI /2 <=dif && dif <= PI)
-					{
-						this->rotate(-offset_angle);
-					}
-					else if(dif <= PI  && dif <= PI * 3/2) {
-						this->rotate(offset_angle);
-					}
-				}
-				else {
-					if (PI  <= dif && dif <= PI * 3/2)
-					{
-						this->rotate(offset_angle);
-					}
-					else if(PI / 2 <= dif && dif <= PI) {
-						this->rotate(-offset_angle);
-					}
-				}*/
-
 				// 距离非常接近减速
 				// TODO：范围调大一点
 				if (distance < spped_check_distance) {
@@ -418,29 +357,22 @@ void Robot::checkCollision(vector<Robot*> robots) {
 			}
 
 			// 两个一直对向贴在一起
-			/*if (distance < RADUIS_FULL * 2.1 && PI / 2 <= dif && dif < PI * 3 / 2) {
-				this->rotate(offset_angle);
-			}*/
 			double r1 = this->goodsType > 0 ? RADUIS_FULL : RADUIS_EMPTY;
 			double r2 = robot->goodsType > 0 ? RADUIS_FULL : RADUIS_EMPTY;
 			if (distance < r1 + r2 + 0.002 && PI / 2 <= dif && dif < PI * 3 / 2) {
 				if (this->coordinate[0] < robot->getCoordinateX()) {
 					if (this->direction > 0) {
-						//robotI.eW += Robot::MAX_ANGLE_SPEED / 4.5;
 						this->rotate(offset_angle);
 					}
 					else {
-						//robotI.eW += -Robot::MAX_ANGLE_SPEED / 4.5;
 						this->rotate(-offset_angle);
 					}
 				}
 				else {
 					if (this->direction > 0) {
-						//robotI.eW += -Robot::MAX_ANGLE_SPEED / 4.5;
 						this->rotate(-offset_angle);
 					}
 					else {
-						//robotI.eW += Robot::MAX_ANGLE_SPEED / 4.5;
 						this->rotate(offset_angle);
 					}
 				}
@@ -462,26 +394,8 @@ void Robot::checkCollision(vector<Robot*> robots) {
 	}
 }
 
-double Robot::calAngleSpeed(const Vec2 target, double& angleToTarget) {
-	double r_coor_x = this->getCoordinateX();
-	double r_coor_y = this->getCoordinateY();
-	double w_coor_x = target[0];
-	double w_coor_y = target[1];
-	angleToTarget = adjustDirection(w_coor_x, w_coor_y, r_coor_x, r_coor_y, this->getDirection());
-	double angleSpeed = angleToTarget / DELTATIME;
-	return angleSpeed;
-}
-
-void Robot::calSpeed(const Vec2 target, int& lineSpeed, double& angleSpeed) {
-	double angleToTarget;
-	angleSpeed = calAngleSpeed(target, angleToTarget);
-	lineSpeed = MAX_FORWARD_SPEED;
-	if (abs(angleToTarget) > 0.08) {
-		lineSpeed = 0;
-	}
-}
-
-double Robot::CalcNeedRotateAngle(const Vec2& target) const {
+// 计算所需旋转角度
+double Robot::calcNeedRotateAngle(const Vec2& target) const {
 	if (isEq(coordinate, target)) {
 		return 0.0;
 	}
@@ -497,8 +411,9 @@ double Robot::CalcNeedRotateAngle(const Vec2& target) const {
 	return rotation;
 }
 
-void Robot::CalcForwardSpeedAndRotateSpeed(const Vec2& target, int& lineSpeed, double& angleSpeed) {
-	double angle = CalcNeedRotateAngle(target);
+// 计算运动速度和角速度
+void Robot::calcForwardSpeedAndRotateSpeed(const Vec2& target, int& lineSpeed, double& angleSpeed) {
+	double angle = calcNeedRotateAngle(target);
 	double absAngle = abs(angle);
 	const double maxRotateSpeed = (angle > 0 ? MAX_ROTATE_SPEED : -MAX_ROTATE_SPEED);
 	const double maxSpeed = MAX_FORWARD_SPEED;
@@ -564,28 +479,29 @@ void Robot::CalcForwardSpeedAndRotateSpeed(const Vec2& target, int& lineSpeed, d
 	//}
 }
 
+// 移动
 void Robot::move() {
 	//assert(path.size() > 0);
 	//checkStatic();
 	//if (!checkPath()) return;
-	if (path.empty()) {
-		this->forward(-2);
-		this->rotate(((rand() & 1) ? 1 : -1) * PI / 8);
-		return;
-	}
 	if (this->blockStatus == 1) {
-		this->forward(-2);
-		this->rotate(((rand() & 1) ? 1 : -1)* PI / 8);
+		this->forward(-1);
+		this->rotate(((rand() & 1) ? 1 : -1)* PI / 4);
+		//this->rotate(PI / 2);
 		return;
 	}
-	if (this->path.size() > 1 && isReachNode()) {
+	if (this->path.empty()) {
+		this->forward(-1);
+		this->rotate(((rand() & 1) ? 1 : -1) * PI / 4);
+		return;
+	}
+	if (this->path.size() > 1 && this->isReachNode()) {
 		this->path.erase(this->path.begin());
 	}
 	int lineSpeed = 0;
 	double angleSpeed = 0;
 	if(this->path.size() > 0){
-		//calSpeed(path[0], lineSpeed, angleSpeed);
-		CalcForwardSpeedAndRotateSpeed(this->path[0], lineSpeed, angleSpeed);
+		this->calcForwardSpeedAndRotateSpeed(this->path[0], lineSpeed, angleSpeed);
 		this->forward(lineSpeed);
 		this->rotate(angleSpeed);
 	}
@@ -625,6 +541,7 @@ void Robot::move() {
 	
 }
 
+// 是否到达下一个路径节点
 bool Robot::isReachNode() {
 	double distance_eps = 0.4;
 	if (abs(coordinate[0] - path[0][0]) < distance_eps && abs(coordinate[1] - path[0][1]) < distance_eps)
@@ -633,10 +550,12 @@ bool Robot::isReachNode() {
 		return false;
 }
 
+// 记录不可达工作台
 void Robot::addUnreachableBench(int workbench_id) {
 	unreachableBench.insert(workbench_id);
 }
 
+// 判断该工作台是否可达
 bool Robot::isReachable(int workbench_id) {
 	if (unreachableBench.find(workbench_id) != unreachableBench.end()) {
 		return false;
@@ -646,6 +565,7 @@ bool Robot::isReachable(int workbench_id) {
 	}
 }
 
+// 记录碰撞时长
 void Robot::addCollisionFrame() {
 	/*if (this->goodsType == 0)
 		collisionFrame += 2;
@@ -654,6 +574,7 @@ void Robot::addCollisionFrame() {
 	collisionFrame += 2;
 }
 
+// 检查路径是否为空 为空则进入阻塞状态
 bool Robot::checkPath() {
 	// 无路径
 	if (this->path.empty() && this->blockStatus == 0) {
@@ -663,8 +584,6 @@ bool Robot::checkPath() {
 		//reset();
 	}
 	if (distance(this->blockCoor, this->coordinate) < 1 && this->blockStatus == 1) {
-		this->forward(-2);
-		this->rotate(PI / 8);
 		return false;
 	}
 	else {
@@ -674,6 +593,7 @@ bool Robot::checkPath() {
 	}
 }
 
+// 检查是否长时间没有移动 是则进入阻塞状态
 void Robot::checkStatic() {
 	if (length(this->lineSpeed) < 0.1 || this->angleSpeed < 0.08) {
 		++this->staticFrame;
@@ -691,6 +611,7 @@ void Robot::checkStatic() {
 	}
 }
 
+// 重置路径
 void Robot::reset() {
 	this->targetBenchId = -1;
 	if (this->targetBench != nullptr) {
@@ -758,5 +679,6 @@ Robot::Robot(int _robotId): robotId(_robotId) {
 	blockCoor = { 0,0 };
 	blockStatus = 0;
 	oldCoor = { 0,0 };
+	backStatus = 0;
 };
 

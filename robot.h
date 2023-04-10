@@ -49,30 +49,28 @@ public:
 	int getCount13();
 
 	// 计算角速度
-	double calAngleSpeed(const Vec2 target, double& angleToTarget);
+	double calcNeedRotateAngle(const Vec2& point) const;
 	// 计算线速度
-	void calSpeed(const Vec2 target, int& lineSpeed, double& angleSpeed);
-	// 计算角速度
-	double CalcNeedRotateAngle(const Vec2& point) const;
-	// 计算线速度
-	void CalcForwardSpeedAndRotateSpeed(const Vec2& target, int& lineSpeed, double& angleSpeed);
+	void calcForwardSpeedAndRotateSpeed(const Vec2& target, int& lineSpeed, double& angleSpeed);
 	// 移动
 	void move();
 	// 判断是否已到达下一个节点
 	bool isReachNode();
 	// 记录不可达工作台
 	void addUnreachableBench(int workbench_id);
-	// 判断工作台是否可达
+	// 判断该工作台是否可达
 	bool isReachable(int workbench_id);
 	// 碰撞检测
 	void checkCollision(vector<Robot*> robots);
 	// 记录碰撞时长
 	void addCollisionFrame();
-	// 检测路径为空
+	// 检查路径是否为空 为空则进入阻塞状态
 	bool checkPath();
-	// 检测静止
+	// 检查是否长时间没有移动 是则进入阻塞状态
 	void checkStatic();
+	// 重置路径
 	void reset();
+	void addOtherRobots(Robot* otherRobot) { otherRobots.insert(otherRobot); }
 private:
 	int robotId;
 	int workbenchId;
@@ -89,7 +87,6 @@ private:
 	int waitSellFrame;
 	int count;
 	vector<Vec2> path;
-	vector<Vec2> rawPath;
 	Vec2 coordinate;
 	unordered_set<int> unreachableBench;
 	Workbench* targetBench;
@@ -103,12 +100,14 @@ private:
 	Vec2 blockCoor;
 	int blockStatus;
 	Vec2 oldCoor;
+	int backStatus;
 
 public:
 	Robot(int _robotId);
+	int getBackStatus() { return backStatus; }
+	void setBackStatus(int status) { backStatus = status; }
 	void setOldCoordinate(Vec2 oldCoordinate) { this->oldCoor = oldCoordinate; }
 	Vec2 getOldCoordinate() { return oldCoor; }
-	void addOtherRobots(Robot* otherRobot) { otherRobots.insert(otherRobot); }
 	int getBlockStatus() { return blockStatus; }
 	void setBlockStatus(int status) { blockStatus = status; }
 	int getMoveStatus() { return moveStatus; }
@@ -132,7 +131,6 @@ public:
 	Vec2 getStartCoor() { return startCoor; }
 	void setGoalCoor(Vec2 goalCoor) { this->goalCoor = goalCoor; }
 	Vec2 getsetGoalCoor() { return goalCoor; }
-
 	int getRobotId() const { return robotId; }
 	void setRobotId(int id) { robotId = id; }
 	int getWorkbenchId() const { return workbenchId; }

@@ -7,6 +7,8 @@
 #include <vector>
 #include <random>
 #include <limits>
+#include <climits>
+#include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
 using namespace std;
@@ -16,13 +18,13 @@ class Rrt
 {
 public:
 	 Rrt(Node* start_, Node* goal_, Graph* graph_);
-     Rrt(Node* start_, Node* goal_, Graph* graph_, unordered_set<Node*> robot_nodes);
-	 vector<Node*> planning();
-     Node* generate_random_node();
-     Node* nearest_neighbor(unordered_set<Node*> vertex, Node* n);
-     Node* new_state(Node* start, Node* end);
-     bool is_collision(Node* start, Node* end);
-     vector<Node*> extract_path(Node* goal);
+     Rrt(Node* start_, Node* goal_, Graph* graph_, unordered_set<Node*> obstacle_robot_nodes);
+	 vector<Node*> searching();
+     Node* generateRandomNode();
+     Node* findNearestNode(unordered_set<Node*> vertex, Node* n);
+     Node* generateNewNode(Node* start, Node* end);
+     bool isPassObstacle(Node* start, Node* end);
+     vector<Node*> extractPath(Node* goal);
      void setModel(int model) { this->model = model; }
 private:
 	Node* start;
@@ -34,9 +36,9 @@ private:
     double threshold;
     double step_len;
     double range;
-    unordered_set<Node*> robot_nodes;
+    unordered_set<Node*> obstacle_robot_nodes;
     int model;
-    double collision_step;
+    double obstacle_check_step;
 };
 
 

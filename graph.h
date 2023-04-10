@@ -9,6 +9,7 @@
 #include <unordered_set>
 #include <iostream>
 #include <string>
+#include <climits>
 #include "robot.h"
 using namespace std;
 using namespace geometry;

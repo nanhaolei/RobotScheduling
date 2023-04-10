@@ -131,7 +131,7 @@ Node* Graph::workbenchToNode(int workbench_id) {
 }
 
 Node* Graph::coordinateToNode(Vec2 coordinate) {
-	double min_dist = DBL_MAX;
+	double min_dist = INT_MAX;
 	Node* cur_node = nullptr;
 	for (auto node : nodes) {
 		double dx = node->coordinate[0] - coordinate[0];
@@ -147,7 +147,6 @@ Node* Graph::coordinateToNode(Vec2 coordinate) {
 	}
 	cerr << "err:coordinateToNode" << endl;
 	return cur_node;
-	//return nullptr;
 }
 
 Node* Graph::indexToNode(array<int, 2> index) {

@@ -2,47 +2,47 @@
 
 DStar::DStar(Node* start_, Node* goal_, Graph* graph_) : start(start_), goal(goal_),graph(graph_) {
 	rhs[goal] = 0.0;
-	U[goal] = CalculateKey(goal);
+	U[goal] = calculateKey(goal);
 	for (auto node : graph->nodes) {
-		rhs[node] = DBL_MAX;
-		g[node] = DBL_MAX;
+		rhs[node] = INT_MAX;
+		g[node] = INT_MAX;
 	}
 };
 
 vector<Node*> DStar::searching() {
 	while (true) {
-		auto pair = TopKey();
+		auto pair = topKey();
 		auto s = pair.first;
 		auto v = pair.second;
-		if (v >= CalculateKey(start) && rhs[start] == g[start]) {
+		if (v >= calculateKey(start) && rhs[start] == g[start]) {
 			return extractPath();
 			//break;
 		}
 		auto k_old = v;
 		U.erase(start);
-		if (k_old < CalculateKey(s)) {
-			U[s] = CalculateKey(s);
+		if (k_old < calculateKey(s)) {
+			U[s] = calculateKey(s);
 		}
 		else if (g[s] > rhs[s]) {
 			g[s] = rhs[s];
 			for (auto neigh : s->neighbors) {
-				UpdateVertex(neigh);
+				updateVertex(neigh);
 			}
 		}
 		else {
-			g[s] = DBL_MAX;
-			UpdateVertex(s);
+			g[s] = INT_MAX;
+			updateVertex(s);
 			for (auto neigh : s->neighbors) {
-				UpdateVertex(neigh);
+				updateVertex(neigh);
 			}
 		}
 	}
 	return {};
 }
 
-void DStar::UpdateVertex(Node* s) {
+void DStar::updateVertex(Node* s) {
 	if (s != goal) {
-		rhs[s] = DBL_MAX;
+		rhs[s] = INT_MAX;
 		for (auto nei : s->neighbors) {
 			rhs[s] = min(rhs[s], g[nei] + cost(s, nei));
 		}
@@ -51,15 +51,15 @@ void DStar::UpdateVertex(Node* s) {
 		U.erase(s);
 	}
 	if (g[s] != rhs[s]) {
-		U[s] = CalculateKey(s);
+		U[s] = calculateKey(s);
 	}
 }
 
-vector<double> DStar::CalculateKey(Node* s) {
+vector<double> DStar::calculateKey(Node* s) {
 	return { min(g[s], rhs[s]) + h(start, s), min(g[s], rhs[s]) };
 }
 
-pair<Node*, vector<double>> DStar::TopKey() {
+pair<Node*, vector<double>> DStar::topKey() {
 	auto cmp = [](auto const& lhs, auto const& rhs) {
 		return lhs.second < rhs.second;
 	};
@@ -92,7 +92,7 @@ vector<Node*> DStar::extractPath() {
 
 double DStar::cost(Node* cur_node, Node* neigh_node) {
 	if (isBesideObstacle(neigh_node) == 2) {
-		return DBL_MAX;
+		return INT_MAX;
 	}
 	if (isBesideObstacle(neigh_node) == 1) {
 		return 1000;
