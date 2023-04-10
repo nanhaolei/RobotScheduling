@@ -39,8 +39,6 @@ struct Node
 class Graph
 {
 public:
-	vector<Node*> nodes;
-	vector<Node*> robotNodes;
 	Graph(char map[MAP_SIZE][MAP_SIZE]);
 	Graph() {};
 	void initNodes(char map[MAP_SIZE][MAP_SIZE]);
@@ -51,9 +49,13 @@ public:
 	Node* robotToNode(Robot* robot);
 	void init(char map[MAP_SIZE][MAP_SIZE]);
 	void updateObstacle(vector<Vec2> robots_coor);
+	bool isObstacle(Vec2 coordinate);
 	
 private:
+	vector<Node*> robotNodes;
+	vector<Node*> nodes;
 	map<array<int, 2>, Node*> index_to_node;
+	vector<Vec2> obstacles;
 };
 
 

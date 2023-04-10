@@ -60,8 +60,6 @@ public:
 	void addUnreachableBench(int workbench_id);
 	// 判断该工作台是否可达
 	bool isReachable(int workbench_id);
-	// 碰撞检测
-	void checkCollision(vector<Robot*> robots);
 	// 记录碰撞时长
 	void addCollisionFrame();
 	// 检查路径是否为空 为空则进入阻塞状态

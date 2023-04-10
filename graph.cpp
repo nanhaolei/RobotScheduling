@@ -27,6 +27,7 @@ void Graph::initNodes(char map[MAP_SIZE][MAP_SIZE]) {
 				node->is_obstacle = true;
 				node->is_workbench = false;
 				node->workbench_id = -1;
+				obstacles.emplace_back(node->coordinate);
 			}
 			// ¹¤×÷Ì¨
 			else if ('1' <= map[i][j] && map[i][j] <= '9') {
@@ -165,7 +166,7 @@ void Graph::updateObstacle(vector<Vec2> robots_coor) {
 		}
 		robotNodes.clear();
 	}
-	for (auto coor : robots_coor) {
+	for (auto& coor : robots_coor) {
 		Node* cur_node = coordinateToNode(coor);
 		cur_node->is_obstacle = true;
 		robotNodes.emplace_back(cur_node);
@@ -173,5 +174,14 @@ void Graph::updateObstacle(vector<Vec2> robots_coor) {
 			neigh->is_obstacle = true;
 			robotNodes.emplace_back(neigh);
 		}*/
+	}
+}
+
+bool Graph::isObstacle(Vec2 coordinate) {
+	for (Vec2 obstacle : obstacles) {
+		if (abs(obstacle[0] - coordinate[0]) < EPSILON && abs(obstacle[1] - coordinate[1]) < EPSILON)
+			return true;
+		else
+			return false;
 	}
 }

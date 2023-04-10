@@ -73,7 +73,6 @@ Node* Rrt::generateRandomNode() {
     double x = (double)rand() / RAND_MAX * (max_x - min_x) + min_x;
     double y = (double)rand() / RAND_MAX * (max_y - min_y) + min_y;
     Node* random_node = graph->coordinateToNode({ x,y });
-    assert(random_node != nullptr);
     return random_node;
 }
 
@@ -99,12 +98,10 @@ Node* Rrt::generateNewNode(Node* start, Node* end) {
     //dist = step_len;
     Node* node_new = graph->coordinateToNode({ start->coordinate[0] + dist * cos(theta), start->coordinate[1] + dist * sin(theta) });
     //parent[node_new] = start;
-    assert(node_new != nullptr);
     return node_new;
 }
 
 bool Rrt::isPassObstacle(Node* start, Node* end) {
-    assert(!start->is_obstacle);
     if (end->is_obstacle || obstacle_robot_nodes.find(end) != obstacle_robot_nodes.end()) {
         return true;
     }
@@ -115,7 +112,6 @@ bool Rrt::isPassObstacle(Node* start, Node* end) {
         for (double x = start_coor[0]; x <= end_coor[0]; x += obstacle_check_step) {
             double y = k * (x - start_coor[0]) + start_coor[1];
             Node* node = graph->coordinateToNode({ x,y });
-            assert(node != nullptr);
             if (node->is_obstacle || obstacle_robot_nodes.find(node) != obstacle_robot_nodes.end()) {
                 return true;
             }
@@ -135,7 +131,6 @@ bool Rrt::isPassObstacle(Node* start, Node* end) {
     else {
         for (double y = start_coor[1]; y <= end_coor[1]; y += obstacle_check_step) {
             Node* node = graph->coordinateToNode({ start_coor[0], y });
-            assert(node != nullptr);
             if (node->is_obstacle || obstacle_robot_nodes.find(node) != obstacle_robot_nodes.end()) {
                 return true;
             }

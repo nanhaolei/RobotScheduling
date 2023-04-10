@@ -21,15 +21,17 @@ vector<Node*> AStar::searching() {
 			return extractPath();
 		}
 		for (auto neighbor : cur_node->neighbors) {
-			/*if (closed.find(neighbor) != closed.end()) 
-				continue;
-			if (neighbor->is_obstacle && *neighbor!=*start)
+			/*if (neighbor->is_obstacle && *neighbor != *start)
 				continue;*/
-			if (neighbor->is_obstacle || obstacle_robot_nodes.find(neighbor) != obstacle_robot_nodes.end()) 
-				continue;
-			//if (neighbor->is_obstacle) continue;
+			/*if (neighbor->is_obstacle || obstacle_robot_nodes.find(neighbor) != obstacle_robot_nodes.end()) 
+				continue;*/
+			/*if (neighbor->is_obstacle) 
+				continue;*/
 			double new_cost = g[cur_node] + cost(cur_node, neighbor);
-			if (g.find(neighbor) == g.end() || new_cost < g[neighbor]) {
+			if (g.find(neighbor) == g.end()) {
+				g[neighbor] = INT_MAX;
+			}
+			if (new_cost < g[neighbor]) {
 				g[neighbor] = new_cost;
 				parent[neighbor] = cur_node;
 				open.push(neighbor);
@@ -76,8 +78,11 @@ void AStar::smoothPath(vector<Node*>& path) {
 }
 
 double AStar::cost(Node* cur_node, Node* neigh_node) {
-	double coff = isBesideObstacle(neigh_node);
-	return coff;
+	if (isPassObstacle(cur_node,neigh_node)) {
+		return INT_MAX;
+	}
+	double cost = isBesideObstacle(neigh_node);
+	return cost;
 	//return 1.0;
 	//return distance(cur_node->coordinate, neigh_node->coordinate);
 }
@@ -102,8 +107,32 @@ double AStar::f(Node* cur_node) {
 	return g[cur_node] + e * heuristic(cur_node);
 }
 
+bool AStar::isPassObstacle(Node* cur_node, Node* neigh_node) {
+	if (cur_node->is_obstacle || neigh_node->is_obstacle || 
+		obstacle_robot_nodes.find(cur_node) != obstacle_robot_nodes.end() ||
+		obstacle_robot_nodes.find(neigh_node) != obstacle_robot_nodes.end()) {
+		return true;
+	}
+	Vec2 s1, s2;
+	if (cur_node->coordinate[0]- neigh_node->coordinate[0]== cur_node->coordinate[1] - neigh_node->coordinate[1]) {
+		s1 = { min(cur_node->coordinate[0], neigh_node->coordinate[0]), min(cur_node->coordinate[1], neigh_node->coordinate[1]) };
+		s2 = { max(cur_node->coordinate[0], neigh_node->coordinate[0]), max(cur_node->coordinate[1], neigh_node->coordinate[1]) };
+		
+	}
+	else {
+		s1 = { min(cur_node->coordinate[0], neigh_node->coordinate[0]), max(cur_node->coordinate[1], neigh_node->coordinate[1]) };
+		s2 = { max(cur_node->coordinate[0], neigh_node->coordinate[0]), min(cur_node->coordinate[1], neigh_node->coordinate[1]) };
+	}
+	if (graph->isObstacle(s1) || graph->isObstacle(s2)) {
+		return true;
+	}
+	else { 
+		return false; 
+	}
+}
+
 int AStar::isBesideObstacle(Node* node) {
-	auto neighbors = node->neighbors;
+	auto& neighbors = node->neighbors;
 	// 节点在角落里或墙边
 	if (neighbors.size() == 3 || neighbors.size() == 5) {
 		return 10000;
@@ -121,13 +150,13 @@ int AStar::isBesideObstacle(Node* node) {
 				return 1000;
 		}
 		// 节点周围障碍物越多 惩罚越大
-		int coeffcient = 1;
+		int cost = 1;
 		for (auto neigh : neighbors) {
 			if (neigh->is_obstacle) {
-				++coeffcient;
+				++cost;
 			}
 		}
-		return coeffcient;
+		return cost;
 	}
 	// 不携带物品
 	else {
@@ -142,13 +171,13 @@ int AStar::isBesideObstacle(Node* node) {
 		else if (count == 1)
 			return 4;
 		// 节点周围障碍物越多 惩罚越大
-		int coeffcient = 1;
+		int cost = 1;
 		for (auto neigh : neighbors) {
 			if (neigh->is_obstacle) {
-				++coeffcient;
+				++cost;
 			}
 		}
-		return coeffcient;
+		return cost;
 	}
 	return 1;
 }

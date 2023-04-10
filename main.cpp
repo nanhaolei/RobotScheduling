@@ -317,12 +317,11 @@ double calSellPriority(const int& robotId, const double& distance, const int& wo
         return INT_MAX;
     }
     Node* bench = graph->workbenchToNode(workbenchId);
-    for (auto neigh : bench->neighbors) {
-        if (neigh->is_obstacle) {
-            workbenchs[workbenchId]->setIsUnreachable(true);
-            return INT_MAX;
-        }
+    if (bench->is_obstacle) {
+        workbenchs[workbenchId]->setIsUnreachable(true);
+        return INT_MAX;
     }
+
     int bench_type = workbenchs[workbenchId]->getType();
     double speed = MAX_FORWARD_SPEED;
     double offset = 1.2;
@@ -533,11 +532,9 @@ double calBuyPriority(const int& robotId, const int& workbenchId) {
         return INT_MAX;
     }
     Node* bench = graph->workbenchToNode(workbenchId);
-    for (auto neigh : bench->neighbors) {
-        if (neigh->is_obstacle) {
-            workbenchs[workbenchId]->setIsUnreachable(true);
-            return INT_MAX;
-        }
+    if (bench->is_obstacle) {
+        workbenchs[workbenchId]->setIsUnreachable(true);
+        return INT_MAX;
     }
 
     int bench_type = workbenchs[workbenchId]->getType();
@@ -1090,7 +1087,7 @@ vector<Vec2> calPath(Node* start, Node* goal, Robot* cur_robot) {
     }
     // 不携带物品或没有记录过
     else {
-        AStar astar(start, goal);
+        AStar astar(start, goal, graph);
         astar.cur_robot = cur_robot;
         if (cur_robot != nullptr) {
             unordered_set<Node*> obstacle_robot_nodes = getOtherRobotNodes(cur_robot);
@@ -1560,7 +1557,7 @@ void initPath() {
             }
 
             //calPath(start, goal, nullptr);
-            AStar astar(start, goal);
+            AStar astar(start, goal, graph);
             vector<Node*> path = astar.searching();
             if (path.size() == 0) {
                 sell_bench->setIsUnreachable(true);
@@ -1600,7 +1597,7 @@ void initUnreachable() {
         for (auto robot : robots) {
             Vec2 start_coor = robot->getCoordinate();
             Node* start = graph->coordinateToNode(start_coor);
-            AStar astar(start, goal);
+            AStar astar(start, goal, graph);
             vector<Node*> path = astar.searching();
             if (path.size() == 0) {
                 robot->addUnreachableBench(workbench->getWorkbenchId());

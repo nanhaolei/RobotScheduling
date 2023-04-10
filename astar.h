@@ -18,6 +18,7 @@ private:
 	};
 	Node* start;
 	Node* goal;
+	Graph* graph;
 	unordered_map<Node*, Node*, NodeHash> parent;
 	unordered_map<Node*, double> g;
 	struct f_compare {
@@ -27,19 +28,20 @@ private:
 		}
 	};
 	priority_queue <Node*, vector<Node*>, f_compare> open;
+	unordered_set<Node*> closed;
 	double e = 2.5;
-	
 public:
-	AStar(Node* start_, Node* goal_) : start(start_), goal(goal_) {};
+	AStar(Node* start_, Node* goal_, Graph* graph_) : start(start_), goal(goal_), graph(graph_) {};
 	vector<Node*> searching();
 	vector<Node*> extractPath();
 	void smoothPath(vector<Node*>& path);
 	double cost(Node* cur_node, Node* neigh_node);
 	double heuristic(Node* cur_node);
 	double f(Node* cur_node);
+	bool isPassObstacle(Node* cur_node, Node* neigh_node);
 	int isBesideObstacle(Node* node);
 	static vector<Vec2> getCoorPath(const vector<Node*>& path);
-
+	
 	unordered_set<Node*> obstacle_robot_nodes;
 	Robot* cur_robot = nullptr;
 };
