@@ -1584,22 +1584,6 @@ void initPath() {
 
 // 初始化不可达情况(计算机器人初始位置与所有工作台的路径)
 void initUnreachable() {
-    //for (auto& robot : robots) {
-    //    for (auto& workbench : workbenchs)
-    //    {
-    //        Vec2 start_coor = robot->getCoordinate();
-    //        Node* start = graph->coordinateToNode(start_coor);
-    //        Node* goal = graph->workbenchToNode(workbench->getWorkbenchId());
-    //        AStar astar(start, goal);
-    //        vector<Node*> path = astar.searching();
-    //        if (path.size() == 0) {
-    //            robot->addUnreachableBench(workbench->getWorkbenchId());
-    //        }
-    //        else {
-    //            all_path[{start->id, goal->id}] = path;
-    //        }
-    //    }
-    //}
     for (auto workbench : workbenchs) {
         Node* goal = graph->workbenchToNode(workbench->getWorkbenchId());
         int isBesideObstacle = 0;
