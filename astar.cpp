@@ -108,9 +108,7 @@ double AStar::f(Node* cur_node) {
 }
 
 bool AStar::isPassObstacle(Node* cur_node, Node* neigh_node) {
-	if (cur_node->is_obstacle || neigh_node->is_obstacle || 
-		obstacle_robot_nodes.find(cur_node) != obstacle_robot_nodes.end() ||
-		obstacle_robot_nodes.find(neigh_node) != obstacle_robot_nodes.end()) {
+	if (cur_node->is_obstacle || neigh_node->is_obstacle || obstacle_robot_nodes.find(neigh_node) != obstacle_robot_nodes.end()) {
 		return true;
 	}
 	Vec2 s1, s2;
